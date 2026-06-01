@@ -1,0 +1,1 @@
+import{n as e}from"./_plugin-vue_export-helper-CDzNdmWK.js";var t={login:async t=>(await e.post(`/auth/login`,t)).data.data,register:async t=>(await e.post(`/auth/register`,t)).data};export{t};
