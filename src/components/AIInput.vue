@@ -36,9 +36,17 @@ import { MagicStick } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { useTaskStore } from '@/stores/task';
 
+interface AIParsedResult {
+  title: string;
+  description: string;
+  dueDate?: string;
+  priority: 'high' | 'medium' | 'low';
+  category?: string;
+}
+
 interface Props {
   placeholder?: string;
-  onAIProcess: (result: any) => void;
+  onAIProcess: (result: AIParsedResult) => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {

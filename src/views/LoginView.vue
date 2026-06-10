@@ -200,50 +200,46 @@ const loginFormRef = ref();
 
 const handleLogin = async () => {
   if (!loginFormRef.value) return;
-  
-  loginFormRef.value.validate(async (valid: boolean) => {
-    if (valid) {
-      loading.value = true;
-      try {
-        const data = await authApi.login({
-          username: loginForm.username,
-          password: loginForm.password
-        });
 
-        if (rememberMe.value) {
-          localStorage.setItem('rememberMe', 'true');
-          localStorage.setItem('savedUsername', loginForm.username);
-        } else {
-          localStorage.removeItem('rememberMe');
-          localStorage.removeItem('savedUsername');
-        }
+  const valid = await loginFormRef.value.validate().catch(() => false);
+  if (!valid) return;
 
-        userStore.setUser(
-          { username: data.username, email: data.email },
-          data.token
-        );
-        ElMessage.success('登录成功！');
-        
-        // 登录成功后，尝试导航到之前想要访问的页面，或者默认导航到任务页面
-        const redirectTo = router.currentRoute.value.query.redirect as string || '/tasks';
-        await router.push(redirectTo).catch(err => {
-          console.error('路由跳转失败:', err);
-          // 如果跳转失败，跳转到默认页面
-          router.push('/tasks').catch(e => {
-            console.error('默认路由跳转也失败:', e);
-          });
-        });
-      } catch (error: any) {
-        console.error('登录失败:', error);
-        ElMessage.error(error.message || '登录失败，请检查用户名和密码');
-      } finally {
-        loading.value = false;
-      }
+  loading.value = true;
+  try {
+    const data = await authApi.login({
+      username: loginForm.username,
+      password: loginForm.password
+    });
+
+    if (rememberMe.value) {
+      localStorage.setItem('rememberMe', 'true');
+      localStorage.setItem('savedUsername', loginForm.username);
     } else {
-      console.log('验证失败!');
-      return false;
+      localStorage.removeItem('rememberMe');
+      localStorage.removeItem('savedUsername');
     }
-  });
+
+    userStore.setUser(
+      { username: data.username, email: data.email },
+      data.token
+    );
+    ElMessage.success('登录成功！');
+
+    // 登录成功后，尝试导航到之前想要访问的页面，或者默认导航到任务页面
+    const redirectTo = router.currentRoute.value.query.redirect as string || '/tasks';
+    await router.push(redirectTo).catch(err => {
+      console.error('路由跳转失败:', err);
+      router.push('/tasks').catch(e => {
+        console.error('默认路由跳转也失败:', e);
+      });
+    });
+  } catch (error: unknown) {
+    console.error('登录失败:', error);
+    const message = error instanceof Error ? error.message : '登录失败，请检查用户名和密码';
+    ElMessage.error(message);
+  } finally {
+    loading.value = false;
+  }
 };
 
 const handleForgotPassword = () => {

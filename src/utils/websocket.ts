@@ -3,11 +3,26 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { Notification as AppNotification } from '@/types/reminder';
 
+interface ReminderNotification {
+  title?: string
+  type?: string
+  message?: string
+  [key: string]: unknown
+}
+
+interface NoteSummaryNotification {
+  noteId?: number
+  summary?: string
+  tags?: string
+  category?: string
+  [key: string]: unknown
+}
+
 class WebSocketService {
   private client: Client;
   private _connected = ref(false);
   private notifications = ref<AppNotification[]>([]);
-  private noteSummaries = ref<any[]>([]);
+  private noteSummaries = ref<NoteSummaryNotification[]>([]);
 
   constructor() {
     this.client = new Client({
@@ -86,11 +101,11 @@ class WebSocketService {
     }
   }
 
-  private handleReminder(reminderData: any) {
+  private handleReminder(reminderData: ReminderNotification) {
     try {
       const notification: AppNotification = {
         id: Date.now(),
-        title: reminderData.title || reminderData.type === 'TASK_DUE' ? '任务到期提醒' : '自定义提醒',
+        title: reminderData.title || (reminderData.type === 'TASK_DUE' ? '任务到期提醒' : '自定义提醒'),
         content: reminderData.message || '您有一个任务需要处理',
         type: reminderData.type === 'TASK_DUE' ? 'warning' : 'info',
         timestamp: new Date().toISOString(),
@@ -104,7 +119,7 @@ class WebSocketService {
     }
   }
 
-  private handleNoteSummary(data: any) {
+  private handleNoteSummary(data: NoteSummaryNotification) {
     console.log('收到笔记摘要:', data);
     this.noteSummaries.value.unshift(data);
     window.dispatchEvent(new CustomEvent('note-summary-ready', { detail: data }));
@@ -134,6 +149,10 @@ class WebSocketService {
     return this.notifications.value;
   }
 
+  getNotificationsRef() {
+    return this.notifications;
+  }
+
   getNoteSummaries() {
     return this.noteSummaries.value;
   }
@@ -155,6 +174,10 @@ class WebSocketService {
 
   isConnected(): boolean {
     return this._connected.value;
+  }
+
+  get connectedRef() {
+    return this._connected;
   }
 }
 

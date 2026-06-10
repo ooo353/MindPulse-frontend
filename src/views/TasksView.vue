@@ -373,7 +373,6 @@ const toggleTaskStatus = async (task: Task) => {
   try {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
     await taskStore.updateTaskStatus(task.id, newStatus);
-    task.status = newStatus;
     ElMessage.success('任务状态更新成功');
   } catch (error: any) {
     console.error('更新任务状态失败:', error);

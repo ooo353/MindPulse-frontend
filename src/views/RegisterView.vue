@@ -233,31 +233,27 @@ const registerFormRef = ref();
 
 const handleRegister = async () => {
   if (!registerFormRef.value) return;
-  
-  registerFormRef.value.validate(async (valid: boolean) => {
-    if (valid) {
-      loading.value = true;
-      try {
-        const response = await authApi.register({
-          username: registerForm.username,
-          email: registerForm.email,
-          password: registerForm.password
-        });
-        
-        userStore.setUser(response.user, response.token);
-        ElMessage.success('注册成功！');
-        router.push('/tasks');
-      } catch (error: any) {
-        console.error('注册失败:', error);
-        ElMessage.error(error.message || '注册失败，请稍后重试');
-      } finally {
-        loading.value = false;
-      }
-    } else {
-      console.log('验证失败!');
-      return false;
-    }
-  });
+
+  const valid = await registerFormRef.value.validate().catch(() => false);
+  if (!valid) return;
+
+  loading.value = true;
+  try {
+    await authApi.register({
+      username: registerForm.username,
+      email: registerForm.email,
+      password: registerForm.password
+    });
+
+    ElMessage.success('注册成功！请登录');
+    router.push('/login');
+  } catch (error: unknown) {
+    console.error('注册失败:', error);
+    const message = error instanceof Error ? error.message : '注册失败，请稍后重试';
+    ElMessage.error(message);
+  } finally {
+    loading.value = false;
+  }
 };
 </script>
 

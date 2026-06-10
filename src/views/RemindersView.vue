@@ -197,18 +197,14 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import Layout from '@/components/Layout.vue';
-import { useTaskStore } from '@/stores/task';
 import { useWebSocket } from '@/utils/websocket';
 import { reminderApi } from '@/api/reminderApi';
-import { Reminder, CreateReminderRequest, Notification } from '@/types/reminder';
-
-const taskStore = useTaskStore();
+import { Reminder, CreateReminderRequest } from '@/types/reminder';
 
 const wsConnected = ref(false);
 let statusTimer: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
-  taskStore.fetchTasks();
   const ws = useWebSocket();
   ws.connect();
   wsConnected.value = ws.isConnected();
@@ -221,15 +217,16 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (statusTimer) clearInterval(statusTimer);
-  useWebSocket().disconnect();
 });
 
 // 状态管理
 const reminders = ref<Reminder[]>([]);
-const notifications = ref<Notification[]>([]);
+// Use the reactive ref directly from WebSocket service for reliable reactivity
+const notifications = useWebSocket().getNotificationsRef();
 const loading = ref(false);
 const showCreateDialog = ref(false);
 const isEditing = ref(false);
+const editingId = ref<number | null>(null);
 const reminderFormRef = ref();
 const remindTimePicker = ref('');
 
@@ -301,6 +298,7 @@ const handleCreateReminder = () => {
 };
 
 const editReminder = (reminder: Reminder) => {
+  editingId.value = reminder.id;
   currentReminder.value = {
     message: reminder.message,
     remindType: reminder.remindType,
@@ -343,9 +341,9 @@ const saveReminder = async () => {
   reminderFormRef.value.validate(async (valid: boolean) => {
     if (valid) {
       try {
-        if (isEditing.value) {
+        if (isEditing.value && editingId.value !== null) {
           await reminderApi.updateReminder(
-            (currentReminder.value as any).id,
+            editingId.value,
             currentReminder.value
           );
           ElMessage.success('提醒更新成功');
@@ -374,15 +372,15 @@ const resetCurrentReminder = () => {
   };
   remindTimePicker.value = '';
   isEditing.value = false;
+  editingId.value = null;
 };
 
 const listenToNotifications = () => {
-  notifications.value = useWebSocket().getNotifications();
+  // Notifications are already synced via the shared ref from WebSocket service
 };
 
 const clearAllNotifications = () => {
   useWebSocket().clearNotifications();
-  notifications.value = [];
 };
 
 // 卡片光晕鼠标跟踪

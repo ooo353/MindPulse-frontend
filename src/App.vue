@@ -1,5 +1,5 @@
 <template>
-  <div id="app" :data-theme="theme">
+  <div id="app">
     <router-view />
     <!-- 暗色模式切换按钮 -->
     <div class="theme-toggle" @click="toggleTheme">
@@ -9,7 +9,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useUserStore } from './stores/user';
 

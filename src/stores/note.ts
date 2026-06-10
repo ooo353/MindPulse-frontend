@@ -13,8 +13,8 @@ export const useNoteStore = defineStore('notes', () => {
       loading.value = true;
       error.value = null;
       notes.value = await noteApi.getNotes();
-    } catch (err: any) {
-      error.value = err.message || '获取笔记失败';
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : '获取笔记失败';
     } finally {
       loading.value = false;
     }
@@ -27,9 +27,9 @@ export const useNoteStore = defineStore('notes', () => {
       const newNote = await noteApi.createNote(noteData);
       notes.value.push(newNote);
       return newNote;
-    } catch (err: any) {
-      error.value = err.message || '创建笔记失败';
-      throw err;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : '创建笔记失败';
+      throw err instanceof Error ? err : new Error(String(err));
     } finally {
       loading.value = false;
     }
@@ -42,9 +42,9 @@ export const useNoteStore = defineStore('notes', () => {
       const result = await noteApi.createNoteAsync(noteData);
       notes.value.push(result.note);
       return result;
-    } catch (err: any) {
-      error.value = err.message || '异步上传笔记失败';
-      throw err;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : '异步上传笔记失败';
+      throw err instanceof Error ? err : new Error(String(err));
     } finally {
       loading.value = false;
     }
@@ -61,9 +61,9 @@ export const useNoteStore = defineStore('notes', () => {
         notes.value[index] = updatedNote;
       }
       return updatedNote;
-    } catch (err: any) {
-      error.value = err.message || '更新笔记失败';
-      throw err;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : '更新笔记失败';
+      throw err instanceof Error ? err : new Error(String(err));
     } finally {
       loading.value = false;
     }
@@ -75,9 +75,9 @@ export const useNoteStore = defineStore('notes', () => {
       error.value = null;
       await noteApi.deleteNote(id);
       notes.value = notes.value.filter(note => note.id !== id);
-    } catch (err: any) {
-      error.value = err.message || '删除笔记失败';
-      throw err;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : '删除笔记失败';
+      throw err instanceof Error ? err : new Error(String(err));
     } finally {
       loading.value = false;
     }

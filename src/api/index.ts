@@ -27,10 +27,13 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Token过期，清除本地存储并跳转到登录页
+      // Token expired: clear local storage and redirect to login.
+      // Note: Using window.location.href instead of router.push() to avoid
+      // circular imports (api/index.ts -> router -> stores -> api/index.ts).
+      // This causes a full page reload but is a safe fallback.
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login'; // 或者使用router进行跳转
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

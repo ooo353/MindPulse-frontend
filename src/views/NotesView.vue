@@ -241,6 +241,7 @@ const showNoteDetail = ref(false);
 const isEditing = ref(false);
 const savingNote = ref(false);
 const uploadingNoteId = ref<number | null>(null);
+const editingNoteId = ref<number | null>(null);
 const noteFormRef = ref();
 
 const currentPage = ref(1);
@@ -322,6 +323,7 @@ const formatDate = (dateString: string) => {
 };
 
 const editNote = (note: Note) => {
+  editingNoteId.value = note.id;
   currentNote.value = {
     title: note.title,
     content: note.content,
@@ -338,20 +340,9 @@ const viewNote = (note: Note) => {
 };
 
 const uploadNoteAsync = async (note: Note) => {
-  uploadingNoteId.value = note.id;
-  try {
-    await noteStore.createNoteAsync({
-      title: note.title,
-      content: note.content,
-      tags: note.tags
-    });
-    ElMessage.success('笔记已提交，摘要异步处理中');
-  } catch (error) {
-    console.error('异步上传笔记失败:', error);
-    ElMessage.error('异步上传笔记失败');
-  } finally {
-    uploadingNoteId.value = null;
-  }
+  // Async processing is only available when creating new notes.
+  // For existing notes, the summary was already generated during creation.
+  ElMessage.info('异步摘要处理仅在新建笔记时可用，当前笔记已有摘要或正在处理中');
 };
 
 const saveNote = async () => {
@@ -369,9 +360,8 @@ const saveNote = async () => {
           .filter(Boolean)
           .join(',');
 
-        if (isEditing.value) {
-          const noteId = (currentNote.value as Note).id;
-          await noteStore.updateNote(noteId, {
+        if (isEditing.value && editingNoteId.value !== null) {
+          await noteStore.updateNote(editingNoteId.value, {
             title: currentNote.value.title,
             content: currentNote.value.content,
             tags: finalTags
@@ -402,6 +392,7 @@ const resetCurrentNote = () => {
   currentNote.value = { title: '', content: '', tags: '' };
   selectedTags.value = '';
   isEditing.value = false;
+  editingNoteId.value = null;
 };
 
 const handleSizeChange = (val: number) => {

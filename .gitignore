@@ -2,7 +2,7 @@
 node_modules
 
 # Build output
-
+dist
 dist-ssr
 
 # Logs
@@ -17,7 +17,6 @@ lerna-debug.log*
 
 # Environment variables (secrets)
 .env
-.env.*
 .env.local
 .env.*.local
 

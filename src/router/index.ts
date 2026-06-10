@@ -4,7 +4,13 @@ import { useUserStore } from '@/stores/user';
 const routes = [
   {
     path: '/',
-    redirect: '/tasks'
+    redirect: '/dashboard'
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('@/views/DashboardView.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/login',
@@ -33,6 +39,22 @@ const routes = [
     name: 'Reminders',
     component: () => import('@/views/RemindersView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('@/views/AdminView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/pomodoro',
+    name: 'Pomodoro',
+    component: () => import('@/views/PomodoroView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/dashboard'
   }
 ];
 
@@ -45,28 +67,17 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
   
-  console.log('路由守卫执行:', {
-    toPath: to.path,
-    requiresAuth: to.meta?.requiresAuth,
-    isAuthenticated: userStore.isAuthenticated,
-    token: userStore.token
-  });
-  
   // 如果路由需要认证且用户未登录，则重定向到登录页
   const isAuth = userStore.isAuthenticated || !!userStore.token;
   if (to.meta?.requiresAuth && !isAuth) {
-    console.log('路由需要认证但用户未登录，重定向到登录页');
     next('/login');
   } else if (to.path === '/login' && userStore.isAuthenticated) {
     // 如果用户已登录但访问登录页，则重定向到任务页
-    console.log('用户已登录但访问登录页，重定向到任务页');
-    next('/tasks');
+    next('/dashboard');
   } else if (to.path === '/register' && userStore.isAuthenticated) {
     // 如果用户已登录但访问注册页，则重定向到任务页
-    console.log('用户已登录但访问注册页，重定向到任务页');
-    next('/tasks');
+    next('/dashboard');
   } else {
-    console.log('允许路由跳转');
     next();
   }
 });

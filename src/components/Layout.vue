@@ -13,6 +13,10 @@
         text-color="rgba(255,255,255,0.8)"
         active-text-color="#fff"
       >
+        <el-menu-item index="/dashboard" route="/dashboard">
+          <el-icon><DataBoard /></el-icon>
+          <span>数据看板</span>
+        </el-menu-item>
         <el-menu-item index="/tasks" route="/tasks">
           <el-icon><Memo /></el-icon>
           <span>任务管理</span>
@@ -25,6 +29,14 @@
           <el-icon><Bell /></el-icon>
           <span>智能提醒</span>
           <el-badge :value="unreadNotificationsCount" v-if="unreadNotificationsCount > 0" />
+        </el-menu-item>
+        <el-menu-item index="/pomodoro" route="/pomodoro">
+          <el-icon><Timer /></el-icon>
+          <span>番茄钟</span>
+        </el-menu-item>
+        <el-menu-item index="/admin" route="/admin">
+          <el-icon><Setting /></el-icon>
+          <span>管理后台</span>
         </el-menu-item>
       </el-menu>
       <div class="sidebar-footer">
@@ -79,11 +91,14 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
-import { 
-  Memo, 
-  Document, 
-  Bell, 
-  ArrowDown 
+import {
+  DataBoard,
+  Memo,
+  Document,
+  Bell,
+  Setting,
+  ArrowDown,
+  Timer
 } from '@element-plus/icons-vue';
 import { useWebSocket } from '@/utils/websocket';
 
@@ -102,9 +117,12 @@ const unreadNotificationsCount = computed(() => {
 const getPageTitle = computed(() => {
   const routeName = router.currentRoute.value.name as string;
   const titles: Record<string, string> = {
+    Dashboard: '数据看板',
     Tasks: '任务管理',
     Notes: '笔记管理',
-    Reminders: '智能提醒'
+    Reminders: '智能提醒',
+    Pomodoro: '番茄钟',
+    Admin: '管理后台'
   };
   return titles[routeName] || 'MindPulse';
 });
