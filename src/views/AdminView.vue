@@ -15,11 +15,19 @@ const selectedUser = ref<{ id: number; username: string; role: string } | null>(
 const newRole = ref('ROLE_USER')
 
 onMounted(async () => {
-  await Promise.all([
-    store.fetchStats(),
-    loadLogs(),
-    store.fetchUsers()
-  ])
+  try {
+    await Promise.all([
+      store.fetchStats(),
+      loadLogs(),
+      store.fetchUsers()
+    ])
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes('403')) {
+      ElMessage.error('Admin access required')
+    } else {
+      ElMessage.error('Failed to load admin data')
+    }
+  }
 })
 
 function onFilterChange() {
@@ -129,7 +137,7 @@ async function updateRole() {
             <el-table-column prop="email" label="Email" />
             <el-table-column prop="role" label="Role" width="120">
               <template #default="{ row }">
-                <el-tag :type="row.role === 'ROLE_ADMIN' ? 'danger' : 'success'" size="small">{{ row.role }}</el-tag>
+                <el-tag :type="row.role === 'ROLE_ADMIN' ? 'danger' : 'success'" size="small">{{ row.role === 'ROLE_ADMIN' ? '管理员' : '普通用户' }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="createdAt" label="Joined" />

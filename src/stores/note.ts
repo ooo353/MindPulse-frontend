@@ -84,15 +84,15 @@ export const useNoteStore = defineStore('notes', () => {
   };
 
   const getNotesByTag = (tag: string) => {
-    return notes.value.filter(note => note.tags.split(',').includes(tag));
+    return notes.value.filter(note => note.tags?.split(',').includes(tag));
   };
 
   const searchNotes = (query: string) => {
     const lowerQuery = query.toLowerCase();
     return notes.value.filter(note =>
-      note.title.toLowerCase().includes(lowerQuery) ||
-      note.content.toLowerCase().includes(lowerQuery) ||
-      note.tags.toLowerCase().includes(lowerQuery)
+      (note.title?.toLowerCase() || '').includes(lowerQuery) ||
+      (note.content?.toLowerCase() || '').includes(lowerQuery) ||
+      (note.tags?.toLowerCase() || '').includes(lowerQuery)
     );
   };
 

@@ -2,12 +2,13 @@ export interface Note {
   id: number;
   title: string;
   content: string;
+  type?: string;
+  fileUrl?: string;
   tags: string;
   summary?: string;
   category?: string;
   status?: 'processing' | 'completed' | 'failed';
-  filePath?: string;
-  fileType?: string;
+  author?: string;
   createdAt: string;
   updatedAt: string;
 }

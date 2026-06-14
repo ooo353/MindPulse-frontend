@@ -46,7 +46,7 @@
         <div class="ai-input-wrapper">
           <AIInput
             placeholder="输入自然语言描述创建任务，例如：'下周五前复习第三章'"
-            @on-a-i-process="handleAIParsedTask"
+            @ai-process="handleAIParsedTask"
           />
         </div>
         <el-button
@@ -195,6 +195,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import Layout from '@/components/Layout.vue';
+import { getErrorMessage } from '@/utils/error';
 import AIInput from '@/components/AIInput.vue';
 import { useTaskStore } from '@/stores/task';
 import { Task, CreateTaskRequest, UpdateTaskRequest } from '@/types/task';
@@ -272,6 +273,7 @@ const tabs = [
 const activeTab = ref('all');
 const showCreateDialog = ref(false);
 const isEditing = ref(false);
+const editingTaskId = ref<number | null>(null);
 const taskFormRef = ref();
 
 // 当前编辑的任务
@@ -363,6 +365,7 @@ const formatDate = (dateString?: string) => {
 
 // 编辑任务
 const editTask = (task: Task) => {
+  editingTaskId.value = task.id;
   currentTask.value = { ...task };
   isEditing.value = true;
   showCreateDialog.value = true;
@@ -370,13 +373,17 @@ const editTask = (task: Task) => {
 
 // 切换任务状态
 const toggleTaskStatus = async (task: Task) => {
+  if (!task.id) {
+    ElMessage.error('任务ID缺失，无法更新状态');
+    return;
+  }
   try {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
     await taskStore.updateTaskStatus(task.id, newStatus);
     ElMessage.success('任务状态更新成功');
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('更新任务状态失败:', error);
-    ElMessage.error(error.message || '更新任务状态失败');
+    ElMessage.error(getErrorMessage(error) || '更新任务状态失败');
   }
 };
 
@@ -385,9 +392,9 @@ const deleteTask = async (id: number) => {
   try {
     await taskStore.deleteTask(id);
     ElMessage.success('任务删除成功');
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('删除任务失败:', error);
-    ElMessage.error('删除任务失败');
+    ElMessage.error(getErrorMessage(error) || '删除任务失败');
   }
 };
 
@@ -398,10 +405,10 @@ const saveTask = async () => {
   taskFormRef.value.validate(async (valid: boolean) => {
     if (valid) {
       try {
-        if (isEditing.value) {
+        if (isEditing.value && editingTaskId.value !== null) {
           // 更新任务
           await taskStore.updateTask(
-            (currentTask.value as Task).id, 
+            editingTaskId.value,
             currentTask.value as UpdateTaskRequest
           );
           ElMessage.success('任务更新成功');
@@ -413,9 +420,9 @@ const saveTask = async () => {
         
         showCreateDialog.value = false;
         resetCurrentTask();
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('保存任务失败:', error);
-        ElMessage.error('保存任务失败');
+        ElMessage.error(getErrorMessage(error) || '保存任务失败');
       }
     } else {
       console.log('验证失败!');
@@ -449,6 +456,7 @@ const resetCurrentTask = () => {
     relatedNotes: ''
   };
   isEditing.value = false;
+  editingTaskId.value = null;
 };
 
 // 新建任务按钮点击

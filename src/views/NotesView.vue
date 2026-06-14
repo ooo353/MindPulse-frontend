@@ -110,11 +110,15 @@
                 <span class="note-date">{{ formatDate(note.updatedAt) }}</span>
                 <div class="note-actions-inline" @click.stop>
                   <el-button type="primary" size="small" text @click="editNote(note)">编辑</el-button>
-                  <el-button
-                    type="primary" size="small" text
-                    :loading="uploadingNoteId === note.id"
-                    @click="uploadNoteAsync(note)"
-                  >异步上传</el-button>
+                  <el-button v-if="note.fileUrl" type="success" size="small" text @click="downloadFile(note.id)">下载</el-button>
+                  <el-popconfirm
+                    title="确定要删除这条笔记吗？"
+                    @confirm="handleDeleteNote(note.id)"
+                  >
+                    <template #reference>
+                      <el-button type="danger" size="small" text>删除</el-button>
+                    </template>
+                  </el-popconfirm>
                 </div>
               </div>
             </div>
@@ -157,6 +161,37 @@
           <el-form-item label="标签">
             <el-input v-model="selectedTags" placeholder="多个标签用逗号分隔，如：高数,微积分,考试" />
           </el-form-item>
+
+          <el-form-item label="附件">
+            <el-upload
+              :auto-upload="false"
+              :limit="1"
+              :on-change="handleFileChange"
+              :on-remove="handleFileRemove"
+              :file-list="uploadFileList"
+              accept=".md,.pdf,.doc,.docx,.txt,.csv,.xlsx,.xls,.pptx,.ppt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.json,.xml"
+              class="note-upload"
+            >
+              <el-button type="primary" plain>
+                <el-icon><Upload /></el-icon>
+                选择文件
+              </el-button>
+              <template #tip>
+                <div class="el-upload__tip">支持格式：md、pdf、doc、docx、txt、xlsx、pptx、图片等（最大 10MB）</div>
+              </template>
+            </el-upload>
+            <div v-if="uploadFile" class="upload-local-preview" style="margin-top: 12px;">
+              <div v-if="isPreviewableImage(uploadFile.name)" class="preview-image">
+                <img :src="localPreviewUrl" alt="预览" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #e4e7ed;" />
+              </div>
+              <div v-else-if="isPreviewablePdf(uploadFile.name)" class="preview-pdf">
+                <iframe :src="localPreviewUrl" style="width: 100%; height: 250px; border: 1px solid #e4e7ed; border-radius: 8px;"></iframe>
+              </div>
+              <div v-else-if="isPreviewableText(uploadFile.name)" class="preview-text">
+                <pre style="max-height: 200px; overflow: auto; background: #f5f7fa; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; font-size: 12px; line-height: 1.5; border: 1px solid #e4e7ed;">{{ localPreviewText }}</pre>
+              </div>
+            </div>
+          </el-form-item>
         </el-form>
 
         <template #footer>
@@ -170,8 +205,8 @@
       <el-dialog
         v-model="showNoteDetail"
         :title="currentNoteDetail.title"
-        width="70%"
-        top="5vh"
+        width="80%"
+        top="3vh"
       >
         <div class="note-detail-content">
           <div class="note-content-display">{{ currentNoteDetail.content }}</div>
@@ -197,11 +232,56 @@
               {{ tag }}
             </el-tag>
           </div>
+
+          <div class="note-file-preview" v-if="currentNoteDetail.fileUrl">
+            <div class="preview-header">
+              <h4>附件预览:</h4>
+              <el-button size="small" type="primary" plain @click="downloadFile(currentNoteDetail.id, currentNoteDetail)">
+                <el-icon><Download /></el-icon> 下载
+              </el-button>
+            </div>
+            <div v-if="loadingFilePreview" class="preview-loading" style="text-align: center; padding: 40px;">
+              <el-icon class="is-loading" :size="24"><Loading /></el-icon>
+              <p style="margin-top: 8px; color: #909399;">加载预览中...</p>
+            </div>
+            <div v-else-if="isImageFile(currentNoteDetail.type) && filePreviewUrl" class="preview-image-container">
+              <div class="preview-image-wrapper" @wheel.prevent="handleImageZoom">
+                <img
+                  :src="filePreviewUrl"
+                  alt="preview"
+                  :style="{ transform: `scale(${imageZoom})`, cursor: imageZoom > 1 ? 'grab' : 'default' }"
+                  @dblclick="resetImageZoom"
+                  draggable="false"
+                />
+              </div>
+              <div class="zoom-controls">
+                <el-button size="small" circle @click="imageZoom = Math.min(5, +(imageZoom + 0.25).toFixed(2))">+</el-button>
+                <span class="zoom-label">{{ Math.round(imageZoom * 100) }}%</span>
+                <el-button size="small" circle @click="imageZoom = Math.max(0.1, +(imageZoom - 0.25).toFixed(2))">-</el-button>
+                <el-button size="small" @click="resetImageZoom" style="margin-left: 8px;">重置</el-button>
+                <el-button size="small" @click="imageZoom = Math.min(5, +(imageZoom + 0.5).toFixed(2))">放大</el-button>
+                <el-button size="small" @click="imageZoom = Math.max(0.1, +(imageZoom - 0.5).toFixed(2))">缩小</el-button>
+                <el-button size="small" @click="imageZoom = fitZoomLevel">适应</el-button>
+              </div>
+            </div>
+            <div v-else-if="isPdfFile(currentNoteDetail.type) && filePreviewUrl" class="preview-pdf">
+              <iframe :src="filePreviewUrl" style="width: 100%; height: 70vh; border: 1px solid #e4e7ed; border-radius: 8px;"></iframe>
+            </div>
+            <div v-else-if="isTextFile(currentNoteDetail.type)" class="preview-text">
+              <pre v-loading="loadingTextPreview" style="max-height: 600px; overflow: auto; background: #f5f7fa; padding: 16px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; font-size: 13px; line-height: 1.6;">{{ textFileContent }}</pre>
+            </div>
+            <div v-else class="preview-other">
+              <p style="color: #909399; margin-bottom: 12px;">该文件类型不支持在线预览</p>
+              <el-button type="primary" @click="downloadFile(currentNoteDetail.id, currentNoteDetail)">
+                <el-icon><Download /></el-icon> 下载文件
+              </el-button>
+            </div>
+          </div>
         </div>
 
         <template #footer>
           <span class="dialog-footer">
-            <el-button @click="showNoteDetail = false">关闭</el-button>
+            <el-button @click="closeNoteDetail">关闭</el-button>
           </span>
         </template>
       </el-dialog>
@@ -211,11 +291,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { Plus, Search } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
+import { Plus, Search, Upload, Download, Loading } from '@element-plus/icons-vue';
+import { ElMessage, type UploadFile, type UploadFiles } from 'element-plus';
 import Layout from '@/components/Layout.vue';
+import { getErrorMessage } from '@/utils/error';
 import { useNoteStore } from '@/stores/note';
 import { Note, CreateNoteRequest, UpdateNoteRequest } from '@/types/note';
+import apiClient from '@/api';
 
 const noteStore = useNoteStore();
 
@@ -243,6 +325,10 @@ const savingNote = ref(false);
 const uploadingNoteId = ref<number | null>(null);
 const editingNoteId = ref<number | null>(null);
 const noteFormRef = ref();
+const uploadFile = ref<File | null>(null);
+const uploadFileList = ref<UploadFile[]>([]);
+const localPreviewUrl = ref<string | null>(null);
+const localPreviewText = ref<string | null>(null);
 
 const currentPage = ref(1);
 const pageSize = ref(8);
@@ -312,7 +398,8 @@ const getTagColor = (tags: string) => {
   return tagColors[hash % tagColors.length];
 };
 
-const truncateText = (text: string, length: number) => {
+const truncateText = (text: string | undefined | null, length: number) => {
+  if (!text) return '';
   if (text.length <= length) return text;
   return text.substring(0, length) + '...';
 };
@@ -320,6 +407,165 @@ const truncateText = (text: string, length: number) => {
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString('zh-CN');
+};
+
+const handleFileChange = (uploadFileItem: UploadFile, _uploadFiles: UploadFiles) => {
+  if (uploadFileItem.raw) {
+    if (uploadFileItem.raw.size > 10 * 1024 * 1024) {
+      ElMessage.error('文件大小超过 10MB 限制');
+      uploadFileList.value = [];
+      uploadFile.value = null;
+      clearLocalPreview();
+      return;
+    }
+    uploadFile.value = uploadFileItem.raw;
+    generateLocalPreview(uploadFileItem.raw);
+  }
+};
+
+const handleFileRemove = () => {
+  uploadFile.value = null;
+  clearLocalPreview();
+};
+
+const isPreviewableImage = (name: string) => /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(name);
+const isPreviewablePdf = (name: string) => /\.pdf$/i.test(name);
+const isPreviewableText = (name: string) => /\.(txt|md|csv|json|xml|log|css|js|html|htm)$/i.test(name);
+
+const clearLocalPreview = () => {
+  if (localPreviewUrl.value) {
+    URL.revokeObjectURL(localPreviewUrl.value);
+    localPreviewUrl.value = null;
+  }
+  localPreviewText.value = null;
+};
+
+const generateLocalPreview = (file: File) => {
+  clearLocalPreview();
+  if (isPreviewableImage(file.name) || isPreviewablePdf(file.name)) {
+    localPreviewUrl.value = URL.createObjectURL(file);
+  } else if (isPreviewableText(file.name)) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      localPreviewText.value = (e.target?.result as string) || '';
+    };
+    reader.readAsText(file);
+  }
+};
+
+const isImageFile = (type: string | undefined) => type === 'image';
+const isPdfFile = (type: string | undefined) => type === 'pdf';
+const isTextFile = (type: string | undefined) => ['text', 'markdown'].includes(type || '');
+
+// Blob-based file preview (works with <img>/<iframe> without CORS issues)
+const filePreviewUrl = ref<string | null>(null);
+const loadingFilePreview = ref(false);
+const textFileContent = ref<string | null>(null);
+const loadingTextPreview = ref(false);
+
+// Image zoom state
+const imageZoom = ref(1);
+const fitZoomLevel = 1;
+
+const handleImageZoom = (e: WheelEvent) => {
+  const delta = e.deltaY > 0 ? -0.15 : 0.15;
+  imageZoom.value = Math.max(0.1, Math.min(5, +(imageZoom.value + delta).toFixed(2)));
+};
+
+const resetImageZoom = () => {
+  imageZoom.value = 1;
+};
+
+const loadFilePreview = async (noteId: number, type: string | undefined) => {
+  // Clean up previous blob URL
+  if (filePreviewUrl.value) {
+    URL.revokeObjectURL(filePreviewUrl.value);
+    filePreviewUrl.value = null;
+  }
+  textFileContent.value = null;
+
+  if (isTextFile(type)) {
+    loadingTextPreview.value = true;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${apiClient.defaults.baseURL}/notes/${noteId}/preview?token=${token}`);
+      if (response.ok) {
+        textFileContent.value = await response.text();
+      }
+    } catch {
+      textFileContent.value = '无法加载文件内容';
+    } finally {
+      loadingTextPreview.value = false;
+    }
+    return;
+  }
+
+  if (isImageFile(type) || isPdfFile(type)) {
+    loadingFilePreview.value = true;
+    imageZoom.value = 1;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${apiClient.defaults.baseURL}/notes/${noteId}/preview?token=${token}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        filePreviewUrl.value = URL.createObjectURL(blob);
+      }
+    } catch {
+      ElMessage.error('文件预览加载失败');
+    } finally {
+      loadingFilePreview.value = false;
+    }
+  }
+};
+
+const downloadFile = async (noteId: number, note?: Note) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${apiClient.defaults.baseURL}/notes/${noteId}/file`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    if (!response.ok) {
+      ElMessage.error('下载失败');
+      return;
+    }
+    const blob = await response.blob();
+    const disposition = response.headers.get('Content-Disposition');
+    let filename = 'download';
+
+    // 1. Try Content-Disposition header
+    if (disposition) {
+      const match = disposition.match(/filename\*?=(?:UTF-8''|")?([^";\n]+)/i);
+      if (match) filename = decodeURIComponent(match[1].trim());
+    }
+
+    // 2. Fallback: extract original filename from fileUrl (uuid_originalName.ext)
+    if (filename === 'download' && note?.fileUrl) {
+      const basename = note.fileUrl.split(/[/\\]/).pop() || '';
+      const underscoreIdx = basename.indexOf('_');
+      filename = underscoreIdx >= 0 ? basename.substring(underscoreIdx + 1) : basename;
+    }
+
+    // 3. Ensure filename has an extension
+    if (filename === 'download' || !filename.includes('.')) {
+      const extMap: Record<string, string> = {
+        image: '.png', pdf: '.pdf', text: '.txt', markdown: '.md',
+        document: '.docx', spreadsheet: '.xlsx', presentation: '.pptx'
+      };
+      const ext = extMap[note?.type || ''] || '';
+      if (ext) filename = filename === 'download' ? `笔记附件${ext}` : filename + ext;
+    }
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch {
+    ElMessage.error('下载失败');
+  }
 };
 
 const editNote = (note: Note) => {
@@ -337,12 +583,34 @@ const editNote = (note: Note) => {
 const viewNote = (note: Note) => {
   currentNoteDetail.value = { ...note };
   showNoteDetail.value = true;
+  if (note.fileUrl) {
+    loadFilePreview(note.id, note.type);
+  }
+};
+
+const closeNoteDetail = () => {
+  showNoteDetail.value = false;
+  if (filePreviewUrl.value) {
+    URL.revokeObjectURL(filePreviewUrl.value);
+    filePreviewUrl.value = null;
+  }
+  textFileContent.value = null;
 };
 
 const uploadNoteAsync = async (note: Note) => {
   // Async processing is only available when creating new notes.
   // For existing notes, the summary was already generated during creation.
   ElMessage.info('异步摘要处理仅在新建笔记时可用，当前笔记已有摘要或正在处理中');
+};
+
+const handleDeleteNote = async (id: number) => {
+  try {
+    await noteStore.deleteNote(id);
+    ElMessage.success('笔记删除成功');
+  } catch (error: unknown) {
+    console.error('删除笔记失败:', error);
+    ElMessage.error(getErrorMessage(error) || '删除笔记失败');
+  }
 };
 
 const saveNote = async () => {
@@ -368,19 +636,20 @@ const saveNote = async () => {
           });
           ElMessage.success('笔记更新成功');
         } else {
-          await noteStore.createNote({
+          await noteStore.createNoteAsync({
             title: currentNote.value.title!,
             content: currentNote.value.content!,
-            tags: finalTags
+            tags: finalTags,
+            file: uploadFile.value || undefined
           });
-          ElMessage.success('笔记创建成功');
+          ElMessage.success('笔记已提交，AI 正在处理摘要');
         }
 
         showCreateDialog.value = false;
         resetCurrentNote();
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('保存笔记失败:', error);
-        ElMessage.error('保存笔记失败');
+        ElMessage.error(getErrorMessage(error) || '保存笔记失败');
       } finally {
         savingNote.value = false;
       }
@@ -393,6 +662,9 @@ const resetCurrentNote = () => {
   selectedTags.value = '';
   isEditing.value = false;
   editingNoteId.value = null;
+  uploadFile.value = null;
+  uploadFileList.value = [];
+  clearLocalPreview();
 };
 
 const handleSizeChange = (val: number) => {
@@ -652,6 +924,61 @@ const handleCardMouseMove = (e: MouseEvent) => {
 
 .dialog-footer {
   text-align: right;
+}
+
+/* 文件预览 */
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.preview-header h4 {
+  margin: 0;
+}
+
+.preview-image-container {
+  position: relative;
+}
+
+.preview-image-wrapper {
+  width: 100%;
+  max-height: 600px;
+  overflow: auto;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-image-wrapper img {
+  max-width: 100%;
+  max-height: 580px;
+  object-fit: contain;
+  transition: transform 0.15s ease;
+  user-select: none;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  justify-content: center;
+}
+
+.zoom-label {
+  min-width: 48px;
+  text-align: center;
+  font-size: 13px;
+  color: #606266;
+  font-weight: 500;
 }
 
 /* 响应式 */

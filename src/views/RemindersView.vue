@@ -197,6 +197,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import Layout from '@/components/Layout.vue';
+import { getErrorMessage } from '@/utils/error';
 import { useWebSocket } from '@/utils/websocket';
 import { reminderApi } from '@/api/reminderApi';
 import { Reminder, CreateReminderRequest } from '@/types/reminder';
@@ -317,11 +318,21 @@ const editReminder = (reminder: Reminder) => {
 
 const toggleReminderEnabled = async (reminder: Reminder) => {
   try {
-    await reminderApi.updateReminder(reminder.id, { enabled: reminder.enabled });
+    await reminderApi.updateReminder(reminder.id, {
+      message: reminder.message,
+      remindType: reminder.remindType,
+      remindTime: reminder.remindTime,
+      remindDate: reminder.remindDate,
+      dayOfWeek: reminder.dayOfWeek,
+      cronExpression: reminder.cronExpression,
+      targetId: reminder.targetId,
+      targetType: reminder.targetType,
+      enabled: reminder.enabled
+    });
     ElMessage.success('提醒状态已更新');
   } catch (error) {
     reminder.enabled = !reminder.enabled;
-    ElMessage.error('更新提醒状态失败');
+    ElMessage.error(getErrorMessage(error));
   }
 };
 

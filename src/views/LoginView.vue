@@ -72,7 +72,7 @@
             >
               <template #icon>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon">
-                  <path d="M15 3h4a2 2 0 0 1 2 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
                   <polyline points="10 17 15 12 10 7"></polyline>
                   <line x1="15" y1="12" x2="3" y2="12"></line>
                 </svg>
@@ -131,6 +131,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { getErrorMessage } from '@/utils/error';
 import { User, Lock } from '@element-plus/icons-vue';
 import { useUserStore } from '@/stores/user';
 import { authApi } from '@/api/authApi';
@@ -220,7 +221,7 @@ const handleLogin = async () => {
     }
 
     userStore.setUser(
-      { username: data.username, email: data.email },
+      { username: data.username, email: data.email, role: data.role },
       data.token
     );
     ElMessage.success('登录成功！');
@@ -235,8 +236,7 @@ const handleLogin = async () => {
     });
   } catch (error: unknown) {
     console.error('登录失败:', error);
-    const message = error instanceof Error ? error.message : '登录失败，请检查用户名和密码';
-    ElMessage.error(message);
+    ElMessage.error(getErrorMessage(error) || '登录失败，请检查用户名和密码');
   } finally {
     loading.value = false;
   }

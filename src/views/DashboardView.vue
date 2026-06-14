@@ -287,15 +287,15 @@ const handleCardMouseMove = (e: MouseEvent) => {
 }
 
 onMounted(async () => {
-  try {
-    await Promise.all([
-      dashboardStore.fetchSummary(),
-      dashboardStore.fetchProductivity('daily'),
-      dashboardStore.fetchCategoryDistribution(),
-      dashboardStore.fetchStudyHeatmap(currentYear)
-    ])
-  } catch {
-    ElMessage.error('Failed to load dashboard data')
+  const results = await Promise.allSettled([
+    dashboardStore.fetchSummary(),
+    dashboardStore.fetchProductivity('daily'),
+    dashboardStore.fetchCategoryDistribution(),
+    dashboardStore.fetchStudyHeatmap(currentYear)
+  ])
+  const hasFailure = results.some(r => r.status === 'rejected')
+  if (hasFailure) {
+    ElMessage.warning('Some dashboard data failed to load')
   }
 })
 </script>

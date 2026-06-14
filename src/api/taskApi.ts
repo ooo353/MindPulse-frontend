@@ -42,9 +42,9 @@ export const taskApi = {
   },
 
   updateTaskStatus: async (id: number, status: string): Promise<Task> => {
-    const res = await apiClient.put<ApiResponse<Task>>(`/tasks/${id}/status`, null, {
+    const res = await apiClient.put<ApiResponse<{ task: Task; message: string }>>(`/tasks/${id}/status`, null, {
       params: { status }
     });
-    return res.data.data;
+    return res.data.data.task;
   }
 };

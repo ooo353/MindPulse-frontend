@@ -44,12 +44,18 @@ const routes = [
     path: '/admin',
     name: 'Admin',
     component: () => import('@/views/AdminView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/pomodoro',
     name: 'Pomodoro',
     component: () => import('@/views/PomodoroView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/ProfileView.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -66,11 +72,18 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
-  
+
+  // Ensure user data is restored before checking permissions
+  if (!userStore.user && localStorage.getItem('token')) {
+    userStore.restoreUserFromStorage();
+  }
+
   // 如果路由需要认证且用户未登录，则重定向到登录页
   const isAuth = userStore.isAuthenticated || !!userStore.token;
   if (to.meta?.requiresAuth && !isAuth) {
     next('/login');
+  } else if (to.meta?.requiresAdmin && !userStore.isAdmin) {
+    next('/dashboard');
   } else if (to.path === '/login' && userStore.isAuthenticated) {
     // 如果用户已登录但访问登录页，则重定向到任务页
     next('/dashboard');

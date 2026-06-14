@@ -46,12 +46,15 @@ interface AIParsedResult {
 
 interface Props {
   placeholder?: string;
-  onAIProcess: (result: AIParsedResult) => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   placeholder: '请输入自然语言描述...'
 });
+
+const emit = defineEmits<{
+  (e: 'ai-process', result: AIParsedResult): void;
+}>();
 
 const taskStore = useTaskStore();
 const inputValue = ref('');
@@ -81,7 +84,7 @@ const handleAIProcess = async () => {
     } else {
       ElMessage.success(`AI解析成功（${result.responseTimeMs}ms）`);
     }
-    props.onAIProcess({
+    emit('ai-process', {
       title: result.parsedTask.title,
       description: result.parsedTask.description,
       dueDate: result.parsedTask.due_date,
@@ -100,7 +103,7 @@ const handleAIProcess = async () => {
       priority: 'medium' as const
     };
 
-    props.onAIProcess(mockResult);
+    emit('ai-process', mockResult);
     inputValue.value = '';
     ElMessage.warning('使用模拟AI解析结果（真实API不可用）');
   } finally {

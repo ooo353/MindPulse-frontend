@@ -10,6 +10,28 @@ export interface ApiResponse<T = unknown> {
 export interface User {
   username: string;
   email: string;
+  nickname?: string;
+  avatar?: string;
+}
+
+export interface UserProfile {
+  id: number
+  username: string
+  nickname: string | null
+  email: string
+  avatar: string | null
+  role: string
+  createdAt: string
+}
+
+export interface UpdateProfileRequest {
+  nickname?: string
+  email?: string
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string
+  newPassword: string
 }
 
 export interface LoginRequest {
@@ -27,4 +49,5 @@ export interface LoginResponseData {
   token: string;
   username: string;
   email: string;
+  role: string;
 }

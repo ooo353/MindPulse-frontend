@@ -32,6 +32,21 @@
         </div>
       </div>
 
+      <!-- Daily pie chart -->
+      <div class="daily-pie-chart" v-if="store.dailySummary.length > 0">
+        <h4>今日学习分布</h4>
+        <div class="pie-container">
+          <div class="pie-chart" :style="pieChartStyle"></div>
+          <div class="pie-legend">
+            <div v-for="item in store.dailySummary" :key="item.sessionType" class="legend-item">
+              <span class="legend-color" :style="{ backgroundColor: getSessionColor(item.sessionType) }"></span>
+              <span class="legend-label">{{ getSessionLabel(item.sessionType) }}</span>
+              <span class="legend-value">{{ item.totalMinutes }}分钟</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 计时器主体 -->
       <div class="timer-section">
         <!-- SVG 环形进度 -->
@@ -52,6 +67,15 @@
             {{ store.activeSession ? store.remainingDisplay : defaultDisplay }}
           </text>
         </svg>
+
+        <!-- Task description input -->
+        <el-input
+          v-model="taskDescription"
+          placeholder="在做什么？例如：复习数学、写英语作文"
+          clearable
+          style="margin-bottom: 16px; max-width: 400px;"
+          :disabled="!!store.activeSession"
+        />
 
         <!-- 会话类型选择 -->
         <div class="type-selector">
@@ -93,12 +117,16 @@
 
       <!-- 最近记录 -->
       <div class="history-section">
-        <h3 class="section-title">最近记录</h3>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <h3 class="section-title" style="margin: 0;">最近记录</h3>
+          <el-button type="danger" size="small" @click="handleClearHistory" :disabled="store.sessions.length === 0">清空历史</el-button>
+        </div>
         <el-table
           :data="store.sessions"
           v-loading="store.loading"
           stripe
           style="width: 100%"
+          empty-text="暂无记录"
         >
           <el-table-column prop="sessionType" label="类型" width="120">
             <template #default="{ row }">
@@ -107,6 +135,7 @@
               </el-tag>
             </template>
           </el-table-column>
+          <el-table-column prop="taskDescription" label="任务描述" show-overflow-tooltip />
           <el-table-column prop="startTime" label="开始时间" min-width="160">
             <template #default="{ row }">
               {{ formatTime(row.startTime) }}
@@ -129,6 +158,11 @@
               </el-tag>
             </template>
           </el-table-column>
+          <el-table-column label="操作" width="100">
+            <template #default="{ row }">
+              <el-button type="danger" size="small" text @click="handleDeleteSession(row.id)">删除</el-button>
+            </template>
+          </el-table-column>
         </el-table>
         <div style="margin-top: 16px; text-align: right; font-size: 13px; color: var(--text-muted);">
           显示最近 {{ store.sessions.length }} 条记录
@@ -142,10 +176,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Layout from '@/components/Layout.vue'
 import { usePomodoroStore } from '@/stores/pomodoro'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getErrorMessage } from '@/utils/error'
 
 const store = usePomodoroStore()
 const selectedType = ref<'focus' | 'short_break' | 'long_break'>('focus')
+const taskDescription = ref('')
 
 const DURATION_MAP = { focus: 25, short_break: 5, long_break: 15 }
 
@@ -174,6 +210,11 @@ onMounted(async () => {
   } catch {
     // History fetch failure is non-critical
   }
+  try {
+    await store.fetchDailySummary()
+  } catch {
+    // Daily summary fetch failure is non-critical
+  }
 })
 
 // 卡片光晕鼠标跟踪
@@ -190,11 +231,44 @@ async function handleStart() {
   try {
     await store.startSession({
       sessionType: selectedType.value,
-      durationMinutes: DURATION_MAP[selectedType.value]
+      durationMinutes: DURATION_MAP[selectedType.value],
+      taskDescription: taskDescription.value || undefined
     })
     ElMessage.success('番茄钟已启动！')
-  } catch {
-    ElMessage.error('启动番茄钟失败')
+  } catch (err: unknown) {
+    ElMessage.error(getErrorMessage(err) || '启动番茄钟失败')
+  }
+}
+
+async function handleDeleteSession(id: number) {
+  try {
+    await ElMessageBox.confirm('确定删除这条记录？', '确认删除', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    await store.deleteSession(id)
+    ElMessage.success('记录已删除')
+  } catch (err: unknown) {
+    if (err !== 'cancel') {
+      ElMessage.error(getErrorMessage(err) || '删除失败')
+    }
+  }
+}
+
+async function handleClearHistory() {
+  try {
+    await ElMessageBox.confirm('确定清空所有历史记录？此操作不可恢复。', '确认清空', {
+      confirmButtonText: '清空',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    await store.clearHistory()
+    ElMessage.success('历史记录已清空')
+  } catch (err: unknown) {
+    if (err !== 'cancel') {
+      ElMessage.error(getErrorMessage(err) || '清空失败')
+    }
   }
 }
 
@@ -204,9 +278,10 @@ async function handleComplete() {
     await store.completeSession(store.activeSession.id)
     await store.fetchStats()
     await store.fetchHistory(1, 10)
+    await store.fetchDailySummary()
     ElMessage.success('番茄钟已完成！')
-  } catch {
-    ElMessage.error('完成番茄钟失败')
+  } catch (err: unknown) {
+    ElMessage.error(getErrorMessage(err) || '完成番茄钟失败')
   }
 }
 
@@ -216,8 +291,8 @@ async function handleCancel() {
     await store.cancelSession(store.activeSession.id)
     await store.fetchHistory(1, 10)
     ElMessage.info('番茄钟已取消')
-  } catch {
-    ElMessage.error('取消番茄钟失败')
+  } catch (err: unknown) {
+    ElMessage.error(getErrorMessage(err) || '取消番茄钟失败')
   }
 }
 
@@ -243,12 +318,40 @@ function getStatusTag(status: string) {
   return map[status] || 'info'
 }
 
-// 时间格式化
+// Time formatting
 function formatTime(dateString: string) {
   if (!dateString) return '-'
   const date = new Date(dateString)
   return date.toLocaleString('zh-CN')
 }
+
+// Pie chart helpers
+const getSessionColor = (type: string) => {
+  const colors: Record<string, string> = { focus: '#409eff', short_break: '#67c23a', long_break: '#e6a23c' };
+  return colors[type] || '#909399';
+};
+
+const getSessionLabel = (type: string) => {
+  const labels: Record<string, string> = { focus: '专注', short_break: '短休息', long_break: '长休息' };
+  return labels[type] || type;
+};
+
+const pieChartStyle = computed(() => {
+  const data = store.dailySummary;
+  if (!data.length) return {};
+  const total = data.reduce((sum, item) => sum + item.totalMinutes, 0);
+  if (total === 0) return {};
+  const colors: Record<string, string> = { focus: '#409eff', short_break: '#67c23a', long_break: '#e6a23c' };
+  let acc = 0;
+  const stops: string[] = [];
+  data.forEach(item => {
+    const pct = (item.totalMinutes / total) * 100;
+    const color = colors[item.sessionType] || '#909399';
+    stops.push(`${color} ${acc}% ${acc + pct}%`);
+    acc += pct;
+  });
+  return { background: `conic-gradient(${stops.join(', ')})` };
+});
 </script>
 
 <style scoped>
@@ -375,6 +478,59 @@ function formatTime(dateString: string) {
   color: var(--text-primary);
 }
 
+/* Daily pie chart */
+.daily-pie-chart {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.daily-pie-chart h4 {
+  margin-bottom: 12px;
+  color: #303133;
+}
+
+.pie-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.pie-chart {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+}
+
+.pie-legend {
+  text-align: left;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legend-label {
+  font-size: 14px;
+  color: #606266;
+}
+
+.legend-value {
+  font-size: 14px;
+  color: #303133;
+  font-weight: 600;
+  margin-left: auto;
+}
+
 /* 响应式 */
 @media (max-width: 768px) {
   .stat-cards {
@@ -388,6 +544,10 @@ function formatTime(dateString: string) {
 
   .action-buttons .el-button {
     width: 100%;
+  }
+
+  .pie-container {
+    flex-direction: column;
   }
 }
 </style>

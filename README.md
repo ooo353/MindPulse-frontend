@@ -1,162 +1,196 @@
-# MindPulse - AI增强型个人生产力工具
+# MindPulse - AI-Enhanced Personal Productivity Tool
 
-面向学生群体的个人生产力工具，通过AI Agent实现自然语言任务解析、笔记摘要生成和智能提醒。
+A personal productivity tool for students, featuring natural language task parsing, AI-generated note summaries, and smart reminders powered by AI Agent.
 
-## 项目特性
+## Features
 
-- **AI任务解析**：用户输入自然语言描述，AI自动解析并填充任务表单
-- **智能笔记管理**：支持多种格式笔记上传，AI自动生成摘要和推荐标签
-- **智能提醒系统**：基于任务的智能提醒，支持多种重复频率
-- **实时通知**：通过WebSocket实现实时消息推送
+- **AI Task Parsing**: Input natural language descriptions, AI auto-fills task forms
+- **Smart Note Management**: Multi-format note upload, AI auto-generates summaries and tag recommendations
+- **Smart Reminders**: Task-based intelligent reminders with multiple recurrence frequencies
+- **Real-time Notifications**: WebSocket-based real-time message push
 
-## 技术栈
+## Tech Stack
 
-- **前端框架**：Vue 3.5+ (Composition API + `<script setup>`)
-- **类型系统**：TypeScript 5.0+ (strict 模式)
-- **UI组件库**：Element Plus 2.13+
-- **HTTP客户端**：Axios 1.14+
-- **实时通信**：STOMP over SockJS
-- **路由管理**：Vue Router 4.6+
-- **状态管理**：Pinia 3.0+
-- **构建工具**：Vite 8.0+
-- **主题系统**：CSS 自定义属性（明暗主题切换）
+- **Framework**: Vue 3.5+ (Composition API + `<script setup>`)
+- **Type System**: TypeScript 5.0+ (strict mode)
+- **UI Library**: Element Plus 2.13+
+- **HTTP Client**: Axios 1.14+
+- **Realtime**: STOMP over SockJS
+- **Router**: Vue Router 4.6+
+- **State Management**: Pinia 3.0+
+- **Build Tool**: Vite 8.0+
+- **i18n**: vue-i18n 9 (Chinese/English)
+- **Theme**: CSS custom properties (light/dark theme toggle)
 
-## 项目结构
+## Project Structure
 
 ```
 src/
-├── api/                    # API接口封装
-│   ├── authApi.ts          # 认证相关API
-│   ├── noteApi.ts          # 笔记相关API
-│   ├── reminderApi.ts      # 提醒相关API
-│   ├── taskApi.ts          # 任务相关API
-│   └── index.ts            # Axios配置
-├── components/             # 公共组件
-│   ├── AIInput.vue         # AI输入框组件
-│   └── Layout.vue          # 主布局组件
-├── router/                 # 路由配置
-│   └── index.ts            # 路由定义
-├── stores/                 # Pinia状态管理
-│   ├── user.ts             # 用户状态
-│   ├── task.ts             # 任务状态
-│   └── note.ts             # 笔记状态
-├── types/                  # TypeScript类型定义
-│   ├── auth.ts             # 认证类型
-│   ├── note.ts             # 笔记类型
-│   ├── reminder.ts         # 提醒类型
-│   └── task.ts             # 任务类型
-├── utils/                  # 工具函数
-│   └── websocket.ts        # WebSocket连接管理
-├── views/                  # 页面组件
-│   ├── LoginView.vue       # 登录页面
-│   ├── RegisterView.vue    # 注册页面
-│   ├── TasksView.vue       # 任务管理页面
-│   ├── NotesView.vue       # 笔记管理页面
-│   └── RemindersView.vue   # 智能提醒页面
-├── App.vue                 # 根组件
-├── main.ts                 # 应用入口
-└── style.css               # 全局样式 + CSS 变量（明暗主题）
+├── api/                    # API modules
+│   ├── authApi.ts          # Authentication API
+│   ├── noteApi.ts          # Note API
+│   ├── reminderApi.ts      # Reminder API
+│   ├── taskApi.ts          # Task API
+│   ├── pomodoroApi.ts      # Pomodoro API
+│   ├── dashboardApi.ts     # Dashboard API
+│   ├── adminApi.ts         # Admin API
+│   └── index.ts            # Axios configuration
+├── components/             # Shared components
+│   ├── AIInput.vue         # AI input component
+│   └── Layout.vue          # Main layout
+├── i18n/                   # Internationalization
+│   ├── index.ts            # i18n instance
+│   └── locales/            # Translation files
+│       ├── zh-CN.ts        # Chinese
+│       └── en.ts           # English
+├── router/                 # Route configuration
+│   └── index.ts            # Route definitions
+├── stores/                 # Pinia state management
+│   ├── user.ts             # User state
+│   ├── task.ts             # Task state
+│   ├── note.ts             # Note state
+│   ├── pomodoro.ts         # Pomodoro state
+│   ├── dashboard.ts        # Dashboard state
+│   └── admin.ts            # Admin state
+├── types/                  # TypeScript type definitions
+│   ├── auth.ts             # Auth types
+│   ├── note.ts             # Note types
+│   ├── reminder.ts         # Reminder types
+│   ├── task.ts             # Task types
+│   ├── pomodoro.ts         # Pomodoro types
+│   ├── dashboard.ts        # Dashboard types
+│   └── admin.ts            # Admin types
+├── utils/                  # Utilities
+│   └── websocket.ts        # WebSocket connection manager
+├── views/                  # Page components
+│   ├── LoginView.vue       # Login page
+│   ├── RegisterView.vue    # Registration page
+│   ├── TasksView.vue       # Task management
+│   ├── NotesView.vue       # Note management
+│   ├── RemindersView.vue   # Smart reminders
+│   ├── PomodoroView.vue    # Pomodoro timer
+│   ├── DashboardView.vue   # Data dashboard
+│   └── AdminView.vue       # Admin panel
+├── App.vue                 # Root component
+├── main.ts                 # Entry point
+└── style.css               # Global styles + CSS variables
 ```
 
-## 核心功能
+## Core Features
 
-### 任务管理
-- 任务列表（支持筛选：全部/待完成/已完成/已归档）
-- 任务创建/编辑表单
-- AI任务解析（自然语言输入自动填充表单）
-- 任务日历视图
-- 任务优先级标识
-- 任务状态管理
+### Task Management
+- Task list (filter: all/pending/completed/archived)
+- Task create/edit forms
+- AI task parsing (natural language auto-fills form)
+- Task priority labels
+- Task status management
 
-### 笔记管理
-- 笔记列表（卡片或列表视图）
-- 笔记上传组件（支持PDF、图片、文本）
-- 笔记分类标签系统
-- AI摘要生成
-- 笔记搜索与关联推荐
+### Note Management
+- Note list (card or list view)
+- Note upload (PDF, image, text)
+- Note tag system
+- AI summary generation
+- Note search and related recommendations
 
-### 智能提醒
-- 提醒设置界面（设置提醒时间、频率）
-- 通知历史记录列表
-- 桌面通知系统（WebSocket实时接收）
+### Smart Reminders
+- Reminder settings (time, frequency)
+- Notification history
+- Desktop notifications (WebSocket real-time)
 
-## API 接口
+### Pomodoro Timer
+- Focus/short break/long break sessions
+- SVG ring progress display
+- Study statistics (daily/weekly/monthly)
+- Session history
 
-> 后端 API 基础地址：`http://localhost:8090/api`  
-> 在线 API 文档：`http://localhost:8090/doc.html`  
-> 离线 API 文档：根目录 `interface.md`
+### Data Dashboard
+- Summary cards (total tasks, completion rate, active days)
+- Productivity trend charts
+- Category distribution
+- GitHub-style study heatmap
 
-### 认证
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/auth/login` | 用户登录，返回 JWT 令牌 |
-| POST | `/api/auth/register` | 用户注册 |
+### Admin Panel
+- Audit log viewer (paginated, filtered)
+- User management (role editing)
+- Admin statistics
 
-### 任务管理
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/tasks?status=pending` | 任务列表（支持状态过滤） |
-| POST | `/api/tasks` | 创建任务 |
-| GET | `/api/tasks/{id}` | 任务详情 |
-| PUT | `/api/tasks/{id}` | 更新任务 |
-| PUT | `/api/tasks/{id}/status?status=completed` | 更新任务状态（分布式锁保护，409=并发冲突） |
-| DELETE | `/api/tasks/{id}` | 删除任务 |
-| POST | `/api/tasks/parse` | AI 任务解析（自然语言 → 结构化任务，支持语义缓存） |
-| GET | `/api/tasks/cache-stats` | AI 解析缓存统计（命中率、平均响应时间） |
+## API Endpoints
 
-### 笔记管理
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/notes?keyword=xxx` | 笔记列表（支持关键字搜索） |
-| POST | `/api/notes` | 同步上传笔记 |
-| POST | `/api/notes/async` | **推荐** — 异步上传，AI 摘要通过 WebSocket 推送 |
-| GET | `/api/notes/{id}` | 笔记详情（含 AI 生成的摘要、分类、状态） |
-| PUT | `/api/notes/{id}` | 更新笔记 |
-| DELETE | `/api/notes/{id}` | 删除笔记 |
+> Backend API base: `http://localhost:8090/api`
+> Online API docs: `http://localhost:8090/doc.html`
+> Offline API docs: `interface.md` in project root
 
-### 智能提醒
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/reminders` | 提醒列表 |
-| POST | `/api/reminders` | 创建提醒（ONCE/DAILY/WEEKLY/CUSTOM） |
-| GET | `/api/reminders/{id}` | 提醒详情 |
-| PUT | `/api/reminders/{id}` | 更新提醒 |
-| DELETE | `/api/reminders/{id}` | 删除提醒 |
+### Authentication
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/auth/login` | Login, returns JWT token |
+| POST | `/api/auth/register` | User registration |
 
-### WebSocket 实时推送
-| 项目 | 说明 |
-|------|------|
-| 连接地址 | `ws://localhost:8090/ws` (STOMP over SockJS) |
-| `/user/queue/reminders` | 个人提醒通知（任务到期 + 自定义提醒） |
-| `/user/queue/note-summary` | 笔记摘要异步处理完成通知 |
-| `/topic/reminders` | 全局广播提醒 |
+### Tasks
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/tasks?status=pending` | Task list (status filter) |
+| POST | `/api/tasks` | Create task |
+| GET | `/api/tasks/{id}` | Task detail |
+| PUT | `/api/tasks/{id}` | Update task |
+| PUT | `/api/tasks/{id}/status?status=completed` | Update status (distributed lock, 409=conflict) |
+| DELETE | `/api/tasks/{id}` | Delete task |
+| POST | `/api/tasks/parse` | AI task parsing (NL → structured, semantic cache) |
+| GET | `/api/tasks/cache-stats` | AI cache stats (hit rate, avg response time) |
 
-## 安装与运行
+### Notes
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/notes?keyword=xxx` | Note list (keyword search) |
+| POST | `/api/notes` | Sync upload note |
+| POST | `/api/notes/async` | **Recommended** — async upload, AI summary via WebSocket |
+| GET | `/api/notes/{id}` | Note detail (AI summary, category, status) |
+| PUT | `/api/notes/{id}` | Update note |
+| DELETE | `/api/notes/{id}` | Delete note |
+
+### Reminders
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/reminders` | Reminder list |
+| POST | `/api/reminders` | Create reminder (ONCE/DAILY/WEEKLY/CUSTOM) |
+| GET | `/api/reminders/{id}` | Reminder detail |
+| PUT | `/api/reminders/{id}` | Update reminder |
+| DELETE | `/api/reminders/{id}` | Delete reminder |
+
+### WebSocket Real-time Push
+| Endpoint | Description |
+|----------|-------------|
+| Connection | `ws://localhost:8090/ws` (STOMP over SockJS) |
+| `/user/queue/reminders` | Personal reminder notifications |
+| `/user/queue/note-summary` | Note summary async complete |
+| `/topic/reminders` | Global broadcast reminders |
+
+## Installation & Running
 
 ```bash
-# 安装依赖
+# Install dependencies
 npm install
 
-# 启动开发服务器
+# Start dev server
 npm run dev
 
-# 构建生产版本
+# Build for production
 npm run build
 ```
 
-## 环境要求
+## Requirements
 
 - Node.js >= 18.0.0
 - npm >= 9.0.0
-- 后端服务运行在 `localhost:8090`（详见根目录 `interface.md`）
+- Backend running at `localhost:8090` (see `interface.md` in project root)
 
-## 开发规范
+## Development Conventions
 
-- 所有组件使用 `<script setup lang="ts">` 语法
-- 类型定义统一放在 `src/types/` 目录，接口以请求/响应后缀命名
-- API 调用统一通过 `src/api/` 目录下的模块，不直接在组件中调用 axios
-- 状态管理使用 Pinia（组合式 API 风格），store 负责 API 调用
-- 组件样式使用 scoped CSS，主题色通过 CSS 自定义属性引用
-- 路由守卫确保认证状态（未登录 → `/login`，已登录 → 跳过登录页）
-- 所有用户操作使用 try/catch 包裹，通过 `ElMessage` 反馈结果
-- 提交前确保 `npm run build` 无 TypeScript 错误
+- All components use `<script setup lang="ts">` syntax
+- Type definitions in `src/types/`, interfaces named with request/response suffix
+- API calls through `src/api/` modules, never call axios directly in components
+- State management with Pinia (Composition API style), stores handle API calls
+- Component styles use scoped CSS, theme colors via CSS custom properties
+- Route guards ensure auth state (unauthenticated → `/login`, authenticated → skip login)
+- All user actions wrapped in try/catch, feedback via `ElMessage`
+- Ensure `npm run build` has no TypeScript errors before committing

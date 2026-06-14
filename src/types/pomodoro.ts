@@ -8,6 +8,7 @@ export interface PomodoroSession {
   actualMinutes: number | null;
   status: 'running' | 'completed' | 'cancelled';
   sessionType: 'focus' | 'short_break' | 'long_break';
+  taskDescription: string | null;
   createdAt: string;
 }
 
@@ -24,4 +25,5 @@ export interface CreatePomodoroRequest {
   taskId?: number;
   durationMinutes?: number;
   sessionType?: 'focus' | 'short_break' | 'long_break';
+  taskDescription?: string;
 }

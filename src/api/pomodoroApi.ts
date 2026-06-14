@@ -31,5 +31,19 @@ export const pomodoroApi = {
   async getHistory(page: number = 1, size: number = 10): Promise<PomodoroSession[]> {
     const res = await apiClient.get<ApiResponse<PomodoroSession[]>>('/pomodoro/history', { params: { page, size } });
     return res.data.data;
+  },
+
+  async deleteSession(id: number): Promise<void> {
+    await apiClient.delete(`/pomodoro/${id}`);
+  },
+
+  async clearHistory(): Promise<void> {
+    await apiClient.delete('/pomodoro/history');
+  },
+
+  async getDailySummary(date?: string): Promise<{ sessionType: string; totalMinutes: number }[]> {
+    const params = date ? { date } : {};
+    const res = await apiClient.get<ApiResponse<{ sessionType: string; totalMinutes: number }[]>>('/pomodoro/daily-summary', { params });
+    return res.data.data;
   }
 };

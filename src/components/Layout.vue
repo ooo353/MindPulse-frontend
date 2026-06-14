@@ -9,42 +9,48 @@
         :default-active="$route.path"
         class="sidebar-menu"
         router
-        background-color="transparent"
-        text-color="rgba(255,255,255,0.8)"
-        active-text-color="#fff"
+        background-color="#fff"
+        text-color="#303133"
+        active-text-color="#409eff"
       >
         <el-menu-item index="/dashboard" route="/dashboard">
           <el-icon><DataBoard /></el-icon>
-          <span>数据看板</span>
+          <span>{{ t('sidebar.dashboard') }}</span>
         </el-menu-item>
         <el-menu-item index="/tasks" route="/tasks">
           <el-icon><Memo /></el-icon>
-          <span>任务管理</span>
+          <span>{{ t('sidebar.tasks') }}</span>
         </el-menu-item>
         <el-menu-item index="/notes" route="/notes">
           <el-icon><Document /></el-icon>
-          <span>笔记管理</span>
+          <span>{{ t('sidebar.notes') }}</span>
         </el-menu-item>
         <el-menu-item index="/reminders" route="/reminders">
           <el-icon><Bell /></el-icon>
-          <span>智能提醒</span>
+          <span>{{ t('sidebar.reminders') }}</span>
           <el-badge :value="unreadNotificationsCount" v-if="unreadNotificationsCount > 0" />
         </el-menu-item>
         <el-menu-item index="/pomodoro" route="/pomodoro">
           <el-icon><Timer /></el-icon>
-          <span>番茄钟</span>
+          <span>{{ t('sidebar.pomodoro') }}</span>
         </el-menu-item>
-        <el-menu-item index="/admin" route="/admin">
+        <el-menu-item v-if="userStore.isAdmin" index="/admin" route="/admin">
           <el-icon><Setting /></el-icon>
-          <span>管理后台</span>
+          <span>{{ t('sidebar.admin') }}</span>
         </el-menu-item>
       </el-menu>
       <div class="sidebar-footer">
         <div class="user-avatar" :title="user?.username">
-          <span class="avatar-text">{{ user?.username?.charAt(0)?.toUpperCase() }}</span>
+          <img v-if="userStore.profile?.avatar" :src="userStore.profile.avatar" class="avatar-img" />
+          <span v-else class="avatar-text">{{ user?.username?.charAt(0)?.toUpperCase() }}</span>
           <span class="online-dot"></span>
         </div>
-        <span class="user-name">{{ user?.username }}</span>
+        <div class="user-info-footer">
+          <span class="user-name">{{ user?.nickname || user?.username }}</span>
+          <el-tag :type="userStore.isAdmin ? 'danger' : 'success'" size="small" class="role-tag">
+            {{ userStore.isAdmin ? '管理员' : '用户' }}
+          </el-tag>
+        </div>
       </div>
     </el-aside>
 
@@ -55,13 +61,25 @@
         <div class="header-content">
           <h2>{{ getPageTitle }}</h2>
           <div class="user-actions">
+            <el-dropdown @command="changeLanguage">
+              <el-button type="primary" plain size="small">
+                {{ currentLanguageLabel }}
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="zh-CN">中文</el-dropdown-item>
+                  <el-dropdown-item command="en">English</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
             <el-dropdown>
               <el-button type="primary" plain>
                 {{ user?.username }} <el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
+                  <el-dropdown-item @click="router.push('/profile')">{{ t('user.profile') }}</el-dropdown-item>
+                  <el-dropdown-item @click="logout">{{ t('auth.logout') }}</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -90,6 +108,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useUserStore } from '@/stores/user';
 import {
   DataBoard,
@@ -104,25 +123,31 @@ import { useWebSocket } from '@/utils/websocket';
 
 const router = useRouter();
 const userStore = useUserStore();
+const { t, locale } = useI18n();
 
 const user = computed(() => userStore.user);
 
-// 计算未读通知数量（这里简化处理，实际应从WebSocket服务获取）
+const currentLanguageLabel = computed(() => locale.value === 'zh-CN' ? '中文' : 'English');
+
+function changeLanguage(lang: string) {
+  locale.value = lang;
+  localStorage.setItem('language', lang);
+}
+
 const unreadNotificationsCount = computed(() => {
-  // 在实际应用中，这里应该从WebSocket服务或通知store中获取未读通知数
   return 0;
 });
 
-// 获取当前页面标题
 const getPageTitle = computed(() => {
   const routeName = router.currentRoute.value.name as string;
   const titles: Record<string, string> = {
-    Dashboard: '数据看板',
-    Tasks: '任务管理',
-    Notes: '笔记管理',
-    Reminders: '智能提醒',
-    Pomodoro: '番茄钟',
-    Admin: '管理后台'
+    Dashboard: t('sidebar.dashboard'),
+    Tasks: t('sidebar.tasks'),
+    Notes: t('sidebar.notes'),
+    Reminders: t('sidebar.reminders'),
+    Pomodoro: t('sidebar.pomodoro'),
+    Admin: t('sidebar.admin'),
+    Profile: t('user.profile')
   };
   return titles[routeName] || 'MindPulse';
 });
@@ -148,62 +173,45 @@ const logout = async () => {
 }
 
 .sidebar {
-  background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
-  color: white;
-  box-shadow: var(--shadow-lg);
+  background: #fff;
+  color: #303133;
+  box-shadow: 1px 0 4px rgba(0, 0, 0, 0.06);
   z-index: 100;
   display: flex;
   flex-direction: column;
+  border-right: 1px solid #f0f0f0;
 }
 
 .logo {
   padding: var(--spacing-lg);
   text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #f0f0f0;
+  background: #fff;
 }
 
 .logo-text {
   margin: 0;
-  color: white;
+  color: #303133;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 1px;
-  position: relative;
-  overflow: hidden;
-}
-
-.logo-text::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: shimmer 3s infinite;
-}
-
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
 }
 
 .sidebar-menu {
   border: none;
-  background: transparent !important;
+  background: #fff !important;
   flex: 1;
 }
 
 .sidebar-menu ::v-deep(.el-menu) {
-  background: transparent !important;
+  background: #fff !important;
 }
 
 .sidebar-menu ::v-deep(.el-menu-item) {
-  color: rgba(255, 255, 255, 0.8) !important;
+  color: #606266 !important;
   margin: 2px 8px;
-  border-radius: 8px !important;
-  transition: all 0.25s ease;
+  border-radius: 6px !important;
+  transition: all 0.2s ease;
   position: relative;
   padding-left: 20px !important;
 }
@@ -216,15 +224,15 @@ const logout = async () => {
   transform: translateY(-50%);
   width: 0;
   height: 60%;
-  background: #fff;
+  background: #409eff;
   border-radius: 0 3px 3px 0;
-  transition: width 0.25s ease;
+  transition: width 0.2s ease;
 }
 
 .sidebar-menu ::v-deep(.el-menu-item:hover) {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: white !important;
-  transform: translateX(4px);
+  background: #f5f7fa !important;
+  color: #303133 !important;
+  transform: translateX(2px);
 }
 
 .sidebar-menu ::v-deep(.el-menu-item:hover .el-icon) {
@@ -237,8 +245,8 @@ const logout = async () => {
 }
 
 .sidebar-menu ::v-deep(.el-menu-item.is-active) {
-  background: rgba(255, 255, 255, 0.18) !important;
-  color: white !important;
+  background: #ecf5ff !important;
+  color: #409eff !important;
   font-weight: 600;
 }
 
@@ -246,38 +254,10 @@ const logout = async () => {
   width: 3px;
 }
 
-/* 菜单项点击波纹效果 */
-.sidebar-menu ::v-deep(.el-menu-item) {
-  overflow: hidden;
-  position: relative;
-}
-
-.sidebar-menu ::v-deep(.el-menu-item)::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.3) 10%, transparent 10.01%);
-  background-repeat: no-repeat;
-  background-position: 50%;
-  transform: scale(10, 10);
-  opacity: 0;
-  transition: transform 0.5s, opacity 0.8s;
-}
-
-.sidebar-menu ::v-deep(.el-menu-item):active::after {
-  transform: scale(0, 0);
-  opacity: 0.3;
-  transition: 0s;
-}
-
 /* 侧边栏底部 */
 .sidebar-footer {
   padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid #f0f0f0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -287,7 +267,7 @@ const logout = async () => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: #ecf5ff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -298,7 +278,14 @@ const logout = async () => {
 .avatar-text {
   font-size: 14px;
   font-weight: 700;
-  color: white;
+  color: #409eff;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .online-dot {
@@ -308,13 +295,20 @@ const logout = async () => {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #4cc9f0;
-  border: 2px solid var(--primary-color);
+  background: #67c23a;
+  border: 2px solid #fff;
+}
+
+.user-info-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .user-name {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.9);
+  color: #606266;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;

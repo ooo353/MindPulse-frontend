@@ -140,6 +140,7 @@
 import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { getErrorMessage } from '@/utils/error';
 import { User, Message, Lock } from '@element-plus/icons-vue';
 import { useUserStore } from '@/stores/user';
 import { authApi } from '@/api/authApi';
@@ -249,8 +250,7 @@ const handleRegister = async () => {
     router.push('/login');
   } catch (error: unknown) {
     console.error('注册失败:', error);
-    const message = error instanceof Error ? error.message : '注册失败，请稍后重试';
-    ElMessage.error(message);
+    ElMessage.error(getErrorMessage(error) || '注册失败，请稍后重试');
   } finally {
     loading.value = false;
   }

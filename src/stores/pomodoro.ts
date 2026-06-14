@@ -10,6 +10,7 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
   const stats = ref<PomodoroStats | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const dailySummary = ref<{ sessionType: string; totalMinutes: number }[]>([]);
 
   // Timer state
   const remainingSeconds = ref(0);
@@ -165,6 +166,46 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
     }
   };
 
+  const deleteSession = async (id: number) => {
+    try {
+      loading.value = true;
+      error.value = null;
+      await pomodoroApi.deleteSession(id);
+      sessions.value = sessions.value.filter(s => s.id !== id);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Delete session failed';
+      error.value = message;
+      throw err instanceof Error ? err : new Error(String(err));
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const clearHistory = async () => {
+    try {
+      loading.value = true;
+      error.value = null;
+      await pomodoroApi.clearHistory();
+      sessions.value = [];
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Clear history failed';
+      error.value = message;
+      throw err instanceof Error ? err : new Error(String(err));
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const fetchDailySummary = async (date?: string) => {
+    try {
+      error.value = null;
+      dailySummary.value = await pomodoroApi.getDailySummary(date);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Fetch daily summary failed';
+      error.value = message;
+    }
+  };
+
   return {
     activeSession,
     sessions,
@@ -172,6 +213,7 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
     stats,
     loading,
     error,
+    dailySummary,
     remainingSeconds,
     remainingDisplay,
     progress,
@@ -181,6 +223,9 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
     fetchActiveSession,
     fetchStats,
     fetchHistory,
+    deleteSession,
+    clearHistory,
+    fetchDailySummary,
     stopTimer
   };
 });
