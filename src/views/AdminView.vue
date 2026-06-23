@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Layout from '@/components/Layout.vue'
 import { useAdminStore } from '@/stores/admin'
 import { ElMessage } from 'element-plus'
 
+const { t } = useI18n()
 const store = useAdminStore()
 const activeTab = ref('logs')
 const actionFilter = ref('')
@@ -23,9 +25,9 @@ onMounted(async () => {
     ])
   } catch (err: unknown) {
     if (err instanceof Error && err.message.includes('403')) {
-      ElMessage.error('Admin access required')
+      ElMessage.error(t('admin.accessRequired'))
     } else {
-      ElMessage.error('Failed to load admin data')
+      ElMessage.error(t('admin.loadFailed'))
     }
   }
 })
@@ -54,11 +56,11 @@ async function updateRole() {
   if (!selectedUser.value) return
   try {
     await store.updateUserRole(selectedUser.value.id, newRole.value)
-    ElMessage.success('Role updated successfully')
+    ElMessage.success(t('admin.roleUpdated'))
     roleDialogVisible.value = false
     await store.fetchUsers()
   } catch {
-    ElMessage.error('Failed to update role')
+    ElMessage.error(t('admin.roleUpdateFailed'))
   }
 }
 </script>
@@ -71,7 +73,7 @@ async function updateRole() {
           <el-card shadow="hover">
             <div class="stat-card">
               <div class="stat-value">{{ store.stats?.totalUsers ?? 0 }}</div>
-              <div class="stat-label">Total Users</div>
+              <div class="stat-label">{{ t('admin.totalUsers') }}</div>
             </div>
           </el-card>
         </el-col>
@@ -79,7 +81,7 @@ async function updateRole() {
           <el-card shadow="hover">
             <div class="stat-card">
               <div class="stat-value">{{ store.stats?.totalAuditLogs ?? 0 }}</div>
-              <div class="stat-label">Total Logs</div>
+              <div class="stat-label">{{ t('admin.totalLogs') }}</div>
             </div>
           </el-card>
         </el-col>
@@ -87,22 +89,22 @@ async function updateRole() {
           <el-card shadow="hover">
             <div class="stat-card">
               <div class="stat-value">{{ store.stats?.todayActions ?? 0 }}</div>
-              <div class="stat-label">Today's Actions</div>
+              <div class="stat-label">{{ t('admin.todayActions') }}</div>
             </div>
           </el-card>
         </el-col>
       </el-row>
 
       <el-tabs v-model="activeTab" class="admin-tabs">
-        <el-tab-pane label="Audit Logs" name="logs">
+        <el-tab-pane :label="t('admin.auditLogs')" name="logs">
           <div class="filter-row">
-            <el-select v-model="actionFilter" placeholder="Filter by action" clearable @change="onFilterChange" style="width: 180px">
+            <el-select v-model="actionFilter" :placeholder="t('admin.filterByAction')" clearable @change="onFilterChange" style="width: 180px">
               <el-option label="CREATE" value="CREATE" />
               <el-option label="UPDATE" value="UPDATE" />
               <el-option label="DELETE" value="DELETE" />
               <el-option label="LOGIN" value="LOGIN" />
             </el-select>
-            <el-select v-model="resourceTypeFilter" placeholder="Filter by resource" clearable @change="onFilterChange" style="width: 180px; margin-left: 10px">
+            <el-select v-model="resourceTypeFilter" :placeholder="t('admin.filterByResource')" clearable @change="onFilterChange" style="width: 180px; margin-left: 10px">
               <el-option label="Task" value="Task" />
               <el-option label="Note" value="Note" />
               <el-option label="Reminder" value="Reminder" />
@@ -110,16 +112,16 @@ async function updateRole() {
             </el-select>
           </div>
           <el-table :data="store.auditLogs" v-loading="store.loading" style="width: 100%">
-            <el-table-column prop="userId" label="User" width="120" />
-            <el-table-column prop="action" label="Action" width="100">
+            <el-table-column prop="userId" :label="t('admin.username')" width="120" />
+            <el-table-column prop="action" :label="t('admin.action')" width="100">
               <template #default="{ row }">
                 <el-tag :type="row.action === 'DELETE' ? 'danger' : row.action === 'CREATE' ? 'success' : 'info'" size="small">{{ row.action }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="resourceType" label="Resource" width="120" />
-            <el-table-column prop="resourceId" label="Resource ID" width="100" />
-            <el-table-column prop="ipAddress" label="IP" width="140" />
-            <el-table-column prop="createdAt" label="Time" />
+            <el-table-column prop="resourceType" :label="t('admin.resource')" width="120" />
+            <el-table-column prop="resourceId" :label="t('admin.resourceId')" width="100" />
+            <el-table-column prop="ipAddress" :label="t('admin.ipAddress')" width="140" />
+            <el-table-column prop="createdAt" :label="t('admin.time')" />
           </el-table>
           <el-pagination
             v-model:current-page="page"
@@ -131,34 +133,34 @@ async function updateRole() {
           />
         </el-tab-pane>
 
-        <el-tab-pane label="User Management" name="users">
+        <el-tab-pane :label="t('admin.userManagement')" name="users">
           <el-table :data="store.users" v-loading="store.loading" style="width: 100%">
-            <el-table-column prop="username" label="Username" />
-            <el-table-column prop="email" label="Email" />
-            <el-table-column prop="role" label="Role" width="120">
+            <el-table-column prop="username" :label="t('admin.username')" />
+            <el-table-column prop="email" :label="t('admin.email')" />
+            <el-table-column prop="role" :label="t('admin.role')" width="120">
               <template #default="{ row }">
-                <el-tag :type="row.role === 'ROLE_ADMIN' ? 'danger' : 'success'" size="small">{{ row.role === 'ROLE_ADMIN' ? '管理员' : '普通用户' }}</el-tag>
+                <el-tag :type="row.role === 'ROLE_ADMIN' ? 'danger' : 'success'" size="small">{{ row.role === 'ROLE_ADMIN' ? t('admin.adminRole') : t('admin.userRole') }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="createdAt" label="Joined" />
-            <el-table-column label="Actions" width="120">
+            <el-table-column prop="createdAt" :label="t('admin.joined')" />
+            <el-table-column :label="t('admin.actions')" width="120">
               <template #default="{ row }">
-                <el-button size="small" @click="openRoleDialog(row)">Edit Role</el-button>
+                <el-button size="small" @click="openRoleDialog(row)">{{ t('admin.editRole') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
       </el-tabs>
 
-      <el-dialog v-model="roleDialogVisible" title="Change User Role" width="400px">
-        <p>Change role for <strong>{{ selectedUser?.username }}</strong></p>
+      <el-dialog v-model="roleDialogVisible" :title="t('admin.changeRole')" width="400px">
+        <p>{{ t('admin.changeRoleFor') }} <strong>{{ selectedUser?.username }}</strong></p>
         <el-select v-model="newRole" style="width: 100%; margin-top: 16px">
           <el-option label="USER" value="ROLE_USER" />
           <el-option label="ADMIN" value="ROLE_ADMIN" />
         </el-select>
         <template #footer>
-          <el-button @click="roleDialogVisible = false">Cancel</el-button>
-          <el-button type="primary" @click="updateRole">Confirm</el-button>
+          <el-button @click="roleDialogVisible = false">{{ t('actions.cancel') }}</el-button>
+          <el-button type="primary" @click="updateRole">{{ t('actions.confirm') }}</el-button>
         </template>
       </el-dialog>
     </div>

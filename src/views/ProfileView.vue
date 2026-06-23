@@ -40,12 +40,12 @@
           </div>
         </template>
         <el-form label-width="100px" class="profile-form">
-          <el-form-item label="用户名">
+          <el-form-item :label="t('user.usernameLabel')">
             <el-input :model-value="userStore.user?.username" disabled />
           </el-form-item>
-          <el-form-item label="角色">
+          <el-form-item :label="t('user.roleLabel')">
             <el-tag :type="userStore.isAdmin ? 'danger' : 'success'" size="large">
-              {{ userStore.isAdmin ? '管理员' : '普通用户' }}
+              {{ userStore.isAdmin ? t('user.adminRole') : t('user.userRole') }}
             </el-tag>
           </el-form-item>
           <el-form-item :label="t('user.nickname')">
@@ -155,7 +155,7 @@ async function changePassword() {
 function beforeAvatarUpload(file: File) {
   const isImage = file.type.startsWith('image/')
   if (!isImage) {
-    ElMessage.error('头像必须是图片文件')
+    ElMessage.error(t('user.avatarMustBeImage'))
     return false
   }
   return true
@@ -163,6 +163,11 @@ function beforeAvatarUpload(file: File) {
 
 async function handleAvatarChange(uploadFile: UploadFile) {
   if (!uploadFile.raw) return
+  // Validate file type since auto-upload=false bypasses beforeUpload
+  if (!uploadFile.raw.type.startsWith('image/')) {
+    ElMessage.error(t('user.avatarMustBeImage'))
+    return
+  }
   try {
     await userStore.uploadAvatar(uploadFile.raw)
     ElMessage.success(t('user.avatar') + ' ' + t('common.success'))

@@ -3,8 +3,8 @@
     <div class="notes-container">
       <!-- 页面标题 -->
       <div class="page-header">
-        <h2 class="page-title">笔记管理</h2>
-        <p class="page-subtitle">记录你的想法，AI 帮你整理和总结</p>
+        <h2 class="page-title">{{ t('notes.title') }}</h2>
+        <p class="page-subtitle">{{ t('notes.subtitle') }}</p>
       </div>
 
       <!-- 搜索栏 -->
@@ -12,7 +12,7 @@
         <div class="search-wrapper">
           <el-input
             v-model="searchQuery"
-            placeholder="搜索笔记标题或内容..."
+            :placeholder="t('notes.searchPlaceholder')"
             clearable
             @input="searchNotes"
             class="search-input"
@@ -28,20 +28,20 @@
           class="create-note-btn glossy-button"
         >
           <el-icon><Plus /></el-icon>
-          新建笔记
+          {{ t('notes.createNote') }}
         </el-button>
       </div>
 
       <!-- 标签快捷筛选 -->
       <div v-if="allTags.length > 0" class="tag-filter">
-        <span class="tag-filter-label">标签筛选:</span>
+        <span class="tag-filter-label">{{ t('notes.tagFilter') }}</span>
         <el-tag
           :type="activeTag === '' ? '' : 'info'"
           :effect="activeTag === '' ? 'dark' : 'plain'"
           class="filter-tag"
           @click="activeTag = ''"
         >
-          全部
+          {{ t('notes.all') }}
         </el-tag>
         <el-tag
           v-for="tag in allTags"
@@ -63,8 +63,8 @@
           <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2"/>
           <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2"/>
         </svg>
-        <h3>还没有笔记</h3>
-        <p>点击"新建笔记"记录你的想法</p>
+        <h3>{{ t('notes.noNotes') }}</h3>
+        <p>{{ t('notes.noNotesHint') }}</p>
       </div>
 
       <!-- 骨架屏加载 -->
@@ -91,7 +91,7 @@
             <div class="note-card-inner">
               <div class="card-header">
                 <span class="note-title">{{ note.title }}</span>
-                <el-tag v-if="note.status === 'processing'" type="warning" size="small" class="status-badge">处理中</el-tag>
+                <el-tag v-if="note.status === 'processing'" type="warning" size="small" class="status-badge">{{ t('status.processing') }}</el-tag>
               </div>
               <p class="note-preview">{{ truncateText(note.content, 100) }}</p>
               <div class="note-tags" v-if="note.tags">
@@ -109,14 +109,14 @@
               <div class="note-footer">
                 <span class="note-date">{{ formatDate(note.updatedAt) }}</span>
                 <div class="note-actions-inline" @click.stop>
-                  <el-button type="primary" size="small" text @click="editNote(note)">编辑</el-button>
-                  <el-button v-if="note.fileUrl" type="success" size="small" text @click="downloadFile(note.id)">下载</el-button>
+                  <el-button type="primary" size="small" text @click="editNote(note)">{{ t('actions.edit') }}</el-button>
+                  <el-button v-if="note.fileUrl" type="success" size="small" text @click="downloadFile(note.id, note)">{{ t('actions.download') }}</el-button>
                   <el-popconfirm
-                    title="确定要删除这条笔记吗？"
+                    :title="t('notes.confirmDelete')"
                     @confirm="handleDeleteNote(note.id)"
                   >
                     <template #reference>
-                      <el-button type="danger" size="small" text>删除</el-button>
+                      <el-button type="danger" size="small" text>{{ t('actions.delete') }}</el-button>
                     </template>
                   </el-popconfirm>
                 </div>
@@ -140,29 +140,29 @@
 
       <el-dialog
         v-model="showCreateDialog"
-        :title="isEditing ? '编辑笔记' : '新建笔记'"
+        :title="isEditing ? t('notes.editNote') : t('notes.newNote')"
         width="60%"
         top="5vh"
       >
         <el-form :model="currentNote" :rules="noteRules" ref="noteFormRef" label-width="80px">
-          <el-form-item label="标题" prop="title">
-            <el-input v-model="currentNote.title" placeholder="请输入笔记标题" />
+          <el-form-item :label="t('notes.titleLabel')" prop="title">
+            <el-input v-model="currentNote.title" :placeholder="t('notes.titlePlaceholder')" />
           </el-form-item>
 
-          <el-form-item label="内容" prop="content">
+          <el-form-item :label="t('notes.contentLabel')" prop="content">
             <el-input
               v-model="currentNote.content"
               type="textarea"
               :rows="8"
-              placeholder="请输入笔记内容"
+              :placeholder="t('notes.contentPlaceholder')"
             />
           </el-form-item>
 
-          <el-form-item label="标签">
-            <el-input v-model="selectedTags" placeholder="多个标签用逗号分隔，如：高数,微积分,考试" />
+          <el-form-item :label="t('notes.tagLabel')">
+            <el-input v-model="selectedTags" :placeholder="t('notes.tagPlaceholder')" />
           </el-form-item>
 
-          <el-form-item label="附件">
+          <el-form-item :label="t('notes.attachment')">
             <el-upload
               :auto-upload="false"
               :limit="1"
@@ -174,15 +174,15 @@
             >
               <el-button type="primary" plain>
                 <el-icon><Upload /></el-icon>
-                选择文件
+                {{ t('notes.selectFile') }}
               </el-button>
               <template #tip>
-                <div class="el-upload__tip">支持格式：md、pdf、doc、docx、txt、xlsx、pptx、图片等（最大 10MB）</div>
+                <div class="el-upload__tip">{{ t('notes.uploadTip') }}</div>
               </template>
             </el-upload>
             <div v-if="uploadFile" class="upload-local-preview" style="margin-top: 12px;">
               <div v-if="isPreviewableImage(uploadFile.name)" class="preview-image">
-                <img :src="localPreviewUrl" alt="预览" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #e4e7ed;" />
+                <img :src="localPreviewUrl" alt="preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #e4e7ed;" />
               </div>
               <div v-else-if="isPreviewablePdf(uploadFile.name)" class="preview-pdf">
                 <iframe :src="localPreviewUrl" style="width: 100%; height: 250px; border: 1px solid #e4e7ed; border-radius: 8px;"></iframe>
@@ -196,8 +196,8 @@
 
         <template #footer>
           <span class="dialog-footer">
-            <el-button @click="showCreateDialog = false">取消</el-button>
-            <el-button type="primary" @click="saveNote" :loading="savingNote">保存</el-button>
+            <el-button @click="showCreateDialog = false">{{ t('actions.cancel') }}</el-button>
+            <el-button type="primary" @click="saveNote" :loading="savingNote">{{ t('actions.save') }}</el-button>
           </span>
         </template>
       </el-dialog>
@@ -212,16 +212,16 @@
           <div class="note-content-display">{{ currentNoteDetail.content }}</div>
 
           <div class="note-summary" v-if="currentNoteDetail.summary">
-            <h4>AI摘要:</h4>
+            <h4>{{ t('notes.aiSummary') }}</h4>
             <p>{{ currentNoteDetail.summary }}</p>
           </div>
 
           <div class="note-summary" v-if="currentNoteDetail.category">
-            <h4>AI分类: {{ currentNoteDetail.category }}</h4>
+            <h4>{{ t('notes.aiCategory') }} {{ currentNoteDetail.category }}</h4>
           </div>
 
           <div class="note-tags-section" v-if="currentNoteDetail.tags">
-            <h4>标签:</h4>
+            <h4>{{ t('notes.tags') }}</h4>
             <el-tag
               v-for="tag in currentNoteDetail.tags.split(',')"
               :key="tag"
@@ -235,14 +235,14 @@
 
           <div class="note-file-preview" v-if="currentNoteDetail.fileUrl">
             <div class="preview-header">
-              <h4>附件预览:</h4>
+              <h4>{{ t('notes.filePreview') }}</h4>
               <el-button size="small" type="primary" plain @click="downloadFile(currentNoteDetail.id, currentNoteDetail)">
-                <el-icon><Download /></el-icon> 下载
+                <el-icon><Download /></el-icon> {{ t('actions.download') }}
               </el-button>
             </div>
             <div v-if="loadingFilePreview" class="preview-loading" style="text-align: center; padding: 40px;">
               <el-icon class="is-loading" :size="24"><Loading /></el-icon>
-              <p style="margin-top: 8px; color: #909399;">加载预览中...</p>
+              <p style="margin-top: 8px; color: #909399;">{{ t('notes.loadingPreview') }}</p>
             </div>
             <div v-else-if="isImageFile(currentNoteDetail.type) && filePreviewUrl" class="preview-image-container">
               <div class="preview-image-wrapper" @wheel.prevent="handleImageZoom">
@@ -258,10 +258,10 @@
                 <el-button size="small" circle @click="imageZoom = Math.min(5, +(imageZoom + 0.25).toFixed(2))">+</el-button>
                 <span class="zoom-label">{{ Math.round(imageZoom * 100) }}%</span>
                 <el-button size="small" circle @click="imageZoom = Math.max(0.1, +(imageZoom - 0.25).toFixed(2))">-</el-button>
-                <el-button size="small" @click="resetImageZoom" style="margin-left: 8px;">重置</el-button>
-                <el-button size="small" @click="imageZoom = Math.min(5, +(imageZoom + 0.5).toFixed(2))">放大</el-button>
-                <el-button size="small" @click="imageZoom = Math.max(0.1, +(imageZoom - 0.5).toFixed(2))">缩小</el-button>
-                <el-button size="small" @click="imageZoom = fitZoomLevel">适应</el-button>
+                <el-button size="small" @click="resetImageZoom" style="margin-left: 8px;">{{ t('notes.zoomReset') }}</el-button>
+                <el-button size="small" @click="imageZoom = Math.min(5, +(imageZoom + 0.5).toFixed(2))">{{ t('notes.zoomIn') }}</el-button>
+                <el-button size="small" @click="imageZoom = Math.max(0.1, +(imageZoom - 0.5).toFixed(2))">{{ t('notes.zoomOut') }}</el-button>
+                <el-button size="small" @click="imageZoom = fitZoomLevel">{{ t('notes.zoomFit') }}</el-button>
               </div>
             </div>
             <div v-else-if="isPdfFile(currentNoteDetail.type) && filePreviewUrl" class="preview-pdf">
@@ -271,9 +271,9 @@
               <pre v-loading="loadingTextPreview" style="max-height: 600px; overflow: auto; background: #f5f7fa; padding: 16px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; font-size: 13px; line-height: 1.6;">{{ textFileContent }}</pre>
             </div>
             <div v-else class="preview-other">
-              <p style="color: #909399; margin-bottom: 12px;">该文件类型不支持在线预览</p>
+              <p style="color: #909399; margin-bottom: 12px;">{{ t('notes.unsupportedType') }}</p>
               <el-button type="primary" @click="downloadFile(currentNoteDetail.id, currentNoteDetail)">
-                <el-icon><Download /></el-icon> 下载文件
+                <el-icon><Download /></el-icon> {{ t('notes.downloadFile') }}
               </el-button>
             </div>
           </div>
@@ -281,7 +281,7 @@
 
         <template #footer>
           <span class="dialog-footer">
-            <el-button @click="closeNoteDetail">关闭</el-button>
+            <el-button @click="closeNoteDetail">{{ t('actions.close') }}</el-button>
           </span>
         </template>
       </el-dialog>
@@ -291,6 +291,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Plus, Search, Upload, Download, Loading } from '@element-plus/icons-vue';
 import { ElMessage, type UploadFile, type UploadFiles } from 'element-plus';
 import Layout from '@/components/Layout.vue';
@@ -299,6 +300,7 @@ import { useNoteStore } from '@/stores/note';
 import { Note, CreateNoteRequest, UpdateNoteRequest } from '@/types/note';
 import apiClient from '@/api';
 
+const { t } = useI18n();
 const noteStore = useNoteStore();
 
 onMounted(() => {
@@ -312,7 +314,7 @@ onUnmounted(() => {
 
 const handleNoteSummaryReady = (event: CustomEvent) => {
   const data = event.detail;
-  ElMessage.success(`笔记「${data.title}」AI摘要已生成`);
+  ElMessage.success(t('notes.summaryReady', { title: data.title }));
   noteStore.fetchNotes();
 };
 
@@ -351,15 +353,15 @@ const currentNoteDetail = ref<Note>({
   updatedAt: ''
 });
 
-const noteRules = {
+const noteRules = computed(() => ({
   title: [
-    { required: true, message: '请输入笔记标题', trigger: 'blur' },
-    { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
+    { required: true, message: t('notes.titleRequired'), trigger: 'blur' },
+    { min: 1, max: 100, message: t('notes.titleLength'), trigger: 'blur' }
   ],
   content: [
-    { max: 5000, message: '内容长度不能超过5000个字符', trigger: 'blur' }
+    { max: 5000, message: t('notes.contentLength'), trigger: 'blur' }
   ]
-};
+}));
 
 const allTags = computed(() => {
   const tagSet = new Set<string>();
@@ -412,7 +414,7 @@ const formatDate = (dateString: string) => {
 const handleFileChange = (uploadFileItem: UploadFile, _uploadFiles: UploadFiles) => {
   if (uploadFileItem.raw) {
     if (uploadFileItem.raw.size > 10 * 1024 * 1024) {
-      ElMessage.error('文件大小超过 10MB 限制');
+      ElMessage.error(t('notes.fileSizeExceeded'));
       uploadFileList.value = [];
       uploadFile.value = null;
       clearLocalPreview();
@@ -484,16 +486,24 @@ const loadFilePreview = async (noteId: number, type: string | undefined) => {
   }
   textFileContent.value = null;
 
+  // For document/spreadsheet/presentation types, browser can't preview — skip fetch
+  if (['document', 'spreadsheet', 'presentation', 'file'].includes(type || '')) {
+    return;
+  }
+
   if (isTextFile(type)) {
     loadingTextPreview.value = true;
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${apiClient.defaults.baseURL}/notes/${noteId}/preview?token=${token}`);
+      const response = await fetch(`${apiClient.defaults.baseURL}/notes/${noteId}/preview?token=${encodeURIComponent(token || '')}`);
       if (response.ok) {
         textFileContent.value = await response.text();
+      } else {
+        textFileContent.value = t('notes.previewFailedWithStatus', { status: response.status });
       }
-    } catch {
-      textFileContent.value = '无法加载文件内容';
+    } catch (err) {
+      console.error('文本预览加载失败:', err);
+      textFileContent.value = t('notes.cannotLoadContent');
     } finally {
       loadingTextPreview.value = false;
     }
@@ -505,13 +515,16 @@ const loadFilePreview = async (noteId: number, type: string | undefined) => {
     imageZoom.value = 1;
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${apiClient.defaults.baseURL}/notes/${noteId}/preview?token=${token}`);
+      const response = await fetch(`${apiClient.defaults.baseURL}/notes/${noteId}/preview?token=${encodeURIComponent(token || '')}`);
       if (response.ok) {
         const blob = await response.blob();
         filePreviewUrl.value = URL.createObjectURL(blob);
+      } else {
+        ElMessage.error(t('notes.previewFailedWithStatus', { status: response.status }));
       }
-    } catch {
-      ElMessage.error('文件预览加载失败');
+    } catch (err) {
+      console.error('文件预览加载失败:', err);
+      ElMessage.error(t('notes.downloadFailed'));
     } finally {
       loadingFilePreview.value = false;
     }
@@ -521,50 +534,77 @@ const loadFilePreview = async (noteId: number, type: string | undefined) => {
 const downloadFile = async (noteId: number, note?: Note) => {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`${apiClient.defaults.baseURL}/notes/${noteId}/file`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    });
+    // Use ?token= query param (consistent with preview, works around CORS header issues)
+    const url = `${apiClient.defaults.baseURL}/notes/${noteId}/file?token=${encodeURIComponent(token || '')}`;
+    const response = await fetch(url);
     if (!response.ok) {
-      ElMessage.error('下载失败');
+      if (response.status === 404) {
+        ElMessage.warning(t('notes.fileNotFound'));
+      } else if (response.status === 403) {
+        ElMessage.error(t('notes.noPermission'));
+      } else {
+        ElMessage.error(t('notes.downloadFailedWithStatus', { status: response.status }));
+      }
       return;
     }
     const blob = await response.blob();
-    const disposition = response.headers.get('Content-Disposition');
-    let filename = 'download';
 
-    // 1. Try Content-Disposition header
+    // Extract filename from Content-Disposition header
+    const disposition = response.headers.get('Content-Disposition');
+    let filename = '';
+
     if (disposition) {
-      const match = disposition.match(/filename\*?=(?:UTF-8''|")?([^";\n]+)/i);
-      if (match) filename = decodeURIComponent(match[1].trim());
+      // Try filename*=UTF-8''encoded first, then filename="quoted", then filename=unquoted
+      const starMatch = disposition.match(/filename\*=UTF-8''([^;\n]+)/i);
+      if (starMatch) {
+        filename = decodeURIComponent(starMatch[1].trim());
+      } else {
+        const quotedMatch = disposition.match(/filename="([^"]+)"/i);
+        if (quotedMatch) {
+          filename = decodeURIComponent(quotedMatch[1].trim());
+        } else {
+          const unquotedMatch = disposition.match(/filename=([^;\s]+)/i);
+          if (unquotedMatch) {
+            filename = decodeURIComponent(unquotedMatch[1].trim());
+          }
+        }
+      }
     }
 
-    // 2. Fallback: extract original filename from fileUrl (uuid_originalName.ext)
-    if (filename === 'download' && note?.fileUrl) {
+    // Fallback: extract original filename from fileUrl (uuid_originalName.ext)
+    if (!filename && note?.fileUrl) {
       const basename = note.fileUrl.split(/[/\\]/).pop() || '';
       const underscoreIdx = basename.indexOf('_');
-      filename = underscoreIdx >= 0 ? basename.substring(underscoreIdx + 1) : basename;
+      if (underscoreIdx >= 0 && underscoreIdx < basename.length - 1) {
+        const prefix = basename.substring(0, underscoreIdx);
+        if (prefix.includes('-')) { // UUID prefix
+          filename = basename.substring(underscoreIdx + 1);
+        }
+      }
+      if (!filename) filename = basename;
     }
 
-    // 3. Ensure filename has an extension
-    if (filename === 'download' || !filename.includes('.')) {
+    // Last resort: use type-based default name
+    if (!filename) {
       const extMap: Record<string, string> = {
         image: '.png', pdf: '.pdf', text: '.txt', markdown: '.md',
         document: '.docx', spreadsheet: '.xlsx', presentation: '.pptx'
       };
       const ext = extMap[note?.type || ''] || '';
-      if (ext) filename = filename === 'download' ? `笔记附件${ext}` : filename + ext;
+      filename = `${t('notes.defaultFilename')}${ext}`;
     }
 
-    const url = URL.createObjectURL(blob);
+    const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = url;
+    link.href = blobUrl;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  } catch {
-    ElMessage.error('下载失败');
+    URL.revokeObjectURL(blobUrl);
+  } catch (err) {
+    console.error('下载失败:', err);
+    ElMessage.error(t('notes.downloadFailed'));
   }
 };
 
@@ -600,16 +640,16 @@ const closeNoteDetail = () => {
 const uploadNoteAsync = async (note: Note) => {
   // Async processing is only available when creating new notes.
   // For existing notes, the summary was already generated during creation.
-  ElMessage.info('异步摘要处理仅在新建笔记时可用，当前笔记已有摘要或正在处理中');
+  ElMessage.info(t('notes.asyncOnlyNew'));
 };
 
 const handleDeleteNote = async (id: number) => {
   try {
     await noteStore.deleteNote(id);
-    ElMessage.success('笔记删除成功');
+    ElMessage.success(t('notes.deleteSuccess'));
   } catch (error: unknown) {
     console.error('删除笔记失败:', error);
-    ElMessage.error(getErrorMessage(error) || '删除笔记失败');
+    ElMessage.error(getErrorMessage(error) || t('notes.deleteFailed'));
   }
 };
 
@@ -620,9 +660,8 @@ const saveNote = async () => {
     if (valid) {
       savingNote.value = true;
       try {
-        const finalTags = [currentNote.value.tags, selectedTags.value]
-          .filter(Boolean)
-          .join(',')
+        // Only use selectedTags (the form input) as single source of truth
+        const finalTags = selectedTags.value
           .split(',')
           .map(t => t.trim())
           .filter(Boolean)
@@ -634,7 +673,7 @@ const saveNote = async () => {
             content: currentNote.value.content,
             tags: finalTags
           });
-          ElMessage.success('笔记更新成功');
+          ElMessage.success(t('notes.updateSuccess'));
         } else {
           await noteStore.createNoteAsync({
             title: currentNote.value.title!,
@@ -642,14 +681,14 @@ const saveNote = async () => {
             tags: finalTags,
             file: uploadFile.value || undefined
           });
-          ElMessage.success('笔记已提交，AI 正在处理摘要');
+          ElMessage.success(t('notes.submitSuccess'));
         }
 
         showCreateDialog.value = false;
         resetCurrentNote();
       } catch (error: unknown) {
         console.error('保存笔记失败:', error);
-        ElMessage.error(getErrorMessage(error) || '保存笔记失败');
+        ElMessage.error(getErrorMessage(error) || t('notes.saveFailed'));
       } finally {
         savingNote.value = false;
       }
@@ -979,6 +1018,12 @@ const handleCardMouseMove = (e: MouseEvent) => {
   font-size: 13px;
   color: #606266;
   font-weight: 500;
+}
+
+/* Virtual scrolling optimization - skips rendering of off-screen cards */
+.note-card-col {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
 }
 
 /* 响应式 */

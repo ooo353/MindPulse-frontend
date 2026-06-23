@@ -9,7 +9,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number">{{ store.stats?.todaySessions ?? 0 }}</span>
-            <span class="stat-label">今日完成</span>
+            <span class="stat-label">{{ t('pomodoro.todaySessions') }}</span>
           </div>
         </div>
         <div class="stat-card card-glow-effect" @mousemove="handleCardMouseMove">
@@ -18,7 +18,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number">{{ store.stats?.todayMinutes ?? 0 }}</span>
-            <span class="stat-label">今日分钟</span>
+            <span class="stat-label">{{ t('pomodoro.todayMinutes') }}</span>
           </div>
         </div>
         <div class="stat-card card-glow-effect" @mousemove="handleCardMouseMove">
@@ -27,21 +27,21 @@
           </div>
           <div class="stat-info">
             <span class="stat-number">{{ store.stats?.streakDays ?? 0 }}</span>
-            <span class="stat-label">连续天数</span>
+            <span class="stat-label">{{ t('pomodoro.streak') }}</span>
           </div>
         </div>
       </div>
 
       <!-- Daily pie chart -->
       <div class="daily-pie-chart" v-if="store.dailySummary.length > 0">
-        <h4>今日学习分布</h4>
+        <h4>{{ t('pomodoro.todayDistribution') }}</h4>
         <div class="pie-container">
           <div class="pie-chart" :style="pieChartStyle"></div>
           <div class="pie-legend">
             <div v-for="item in store.dailySummary" :key="item.sessionType" class="legend-item">
               <span class="legend-color" :style="{ backgroundColor: getSessionColor(item.sessionType) }"></span>
               <span class="legend-label">{{ getSessionLabel(item.sessionType) }}</span>
-              <span class="legend-value">{{ item.totalMinutes }}分钟</span>
+              <span class="legend-value">{{ item.totalMinutes }}{{ t('pomodoro.minute') }}</span>
             </div>
           </div>
         </div>
@@ -71,7 +71,7 @@
         <!-- Task description input -->
         <el-input
           v-model="taskDescription"
-          placeholder="在做什么？例如：复习数学、写英语作文"
+          :placeholder="t('pomodoro.whatDoing')"
           clearable
           style="margin-bottom: 16px; max-width: 400px;"
           :disabled="!!store.activeSession"
@@ -80,9 +80,9 @@
         <!-- 会话类型选择 -->
         <div class="type-selector">
           <el-radio-group v-model="selectedType" :disabled="!!store.activeSession">
-            <el-radio-button value="focus">专注 25min</el-radio-button>
-            <el-radio-button value="short_break">短休 5min</el-radio-button>
-            <el-radio-button value="long_break">长休 15min</el-radio-button>
+            <el-radio-button value="focus">{{ t('pomodoro.focus') }} 25min</el-radio-button>
+            <el-radio-button value="short_break">{{ t('pomodoro.shortBreak') }} 5min</el-radio-button>
+            <el-radio-button value="long_break">{{ t('pomodoro.longBreak') }} 15min</el-radio-button>
           </el-radio-group>
         </div>
 
@@ -94,7 +94,7 @@
             :disabled="!!store.activeSession"
             @click="handleStart"
           >
-            开始专注
+            {{ t('pomodoro.focusStart') }}
           </el-button>
           <el-button
             type="success"
@@ -102,7 +102,7 @@
             :disabled="!store.activeSession"
             @click="handleComplete"
           >
-            完成
+            {{ t('pomodoro.complete') }}
           </el-button>
           <el-button
             type="danger"
@@ -110,7 +110,7 @@
             :disabled="!store.activeSession"
             @click="handleCancel"
           >
-            取消
+            {{ t('pomodoro.cancel') }}
           </el-button>
         </div>
       </div>
@@ -118,54 +118,54 @@
       <!-- 最近记录 -->
       <div class="history-section">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-          <h3 class="section-title" style="margin: 0;">最近记录</h3>
-          <el-button type="danger" size="small" @click="handleClearHistory" :disabled="store.sessions.length === 0">清空历史</el-button>
+          <h3 class="section-title" style="margin: 0;">{{ t('pomodoro.recentRecords') }}</h3>
+          <el-button type="danger" size="small" @click="handleClearHistory" :disabled="store.sessions.length === 0">{{ t('pomodoro.clearHistory') }}</el-button>
         </div>
         <el-table
           :data="store.sessions"
           v-loading="store.loading"
           stripe
           style="width: 100%"
-          empty-text="暂无记录"
+          :empty-text="t('pomodoro.noRecords')"
         >
-          <el-table-column prop="sessionType" label="类型" width="120">
+          <el-table-column prop="sessionType" :label="t('pomodoro.type')" width="120">
             <template #default="{ row }">
               <el-tag :type="getSessionTypeTag(row.sessionType)" size="small">
                 {{ getSessionTypeText(row.sessionType) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="taskDescription" label="任务描述" show-overflow-tooltip />
-          <el-table-column prop="startTime" label="开始时间" min-width="160">
+          <el-table-column prop="taskDescription" :label="t('pomodoro.taskDesc')" show-overflow-tooltip />
+          <el-table-column prop="startTime" :label="t('pomodoro.startTime')" min-width="160">
             <template #default="{ row }">
               {{ formatTime(row.startTime) }}
             </template>
           </el-table-column>
-          <el-table-column prop="durationMinutes" label="计划时长" width="100">
+          <el-table-column prop="durationMinutes" :label="t('pomodoro.plannedDuration')" width="100">
             <template #default="{ row }">
-              {{ row.durationMinutes }} 分钟
+              {{ row.durationMinutes }} {{ t('pomodoro.minute') }}
             </template>
           </el-table-column>
-          <el-table-column prop="actualMinutes" label="实际时长" width="100">
+          <el-table-column prop="actualMinutes" :label="t('pomodoro.actualDuration')" width="100">
             <template #default="{ row }">
-              {{ row.actualMinutes != null ? `${row.actualMinutes} 分钟` : '-' }}
+              {{ row.actualMinutes != null ? `${row.actualMinutes} ${t('pomodoro.minute')}` : '-' }}
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" width="100">
+          <el-table-column prop="status" :label="t('pomodoro.status')" width="100">
             <template #default="{ row }">
               <el-tag :type="getStatusTag(row.status)" size="small">
                 {{ getStatusText(row.status) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="100">
+          <el-table-column :label="t('pomodoro.operation')" width="100">
             <template #default="{ row }">
-              <el-button type="danger" size="small" text @click="handleDeleteSession(row.id)">删除</el-button>
+              <el-button type="danger" size="small" text @click="handleDeleteSession(row.id)">{{ t('actions.delete') }}</el-button>
             </template>
           </el-table-column>
         </el-table>
         <div style="margin-top: 16px; text-align: right; font-size: 13px; color: var(--text-muted);">
-          显示最近 {{ store.sessions.length }} 条记录
+          {{ t('pomodoro.showRecent') }} {{ store.sessions.length }} {{ t('pomodoro.records') }}
         </div>
       </div>
     </div>
@@ -174,10 +174,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Layout from '@/components/Layout.vue'
 import { usePomodoroStore } from '@/stores/pomodoro'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getErrorMessage } from '@/utils/error'
+
+const { t } = useI18n()
 
 const store = usePomodoroStore()
 const selectedType = ref<'focus' | 'short_break' | 'long_break'>('focus')
@@ -234,40 +237,40 @@ async function handleStart() {
       durationMinutes: DURATION_MAP[selectedType.value],
       taskDescription: taskDescription.value || undefined
     })
-    ElMessage.success('番茄钟已启动！')
+    ElMessage.success(t('pomodoro.started'))
   } catch (err: unknown) {
-    ElMessage.error(getErrorMessage(err) || '启动番茄钟失败')
+    ElMessage.error(getErrorMessage(err) || t('pomodoro.startFailed'))
   }
 }
 
 async function handleDeleteSession(id: number) {
   try {
-    await ElMessageBox.confirm('确定删除这条记录？', '确认删除', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
+    await ElMessageBox.confirm(t('pomodoro.confirmDelete'), t('pomodoro.confirmDeleteTitle'), {
+      confirmButtonText: t('actions.delete'),
+      cancelButtonText: t('actions.cancel'),
       type: 'warning'
     })
     await store.deleteSession(id)
-    ElMessage.success('记录已删除')
+    ElMessage.success(t('pomodoro.deleted'))
   } catch (err: unknown) {
     if (err !== 'cancel') {
-      ElMessage.error(getErrorMessage(err) || '删除失败')
+      ElMessage.error(getErrorMessage(err) || t('pomodoro.deleteFailed'))
     }
   }
 }
 
 async function handleClearHistory() {
   try {
-    await ElMessageBox.confirm('确定清空所有历史记录？此操作不可恢复。', '确认清空', {
-      confirmButtonText: '清空',
-      cancelButtonText: '取消',
+    await ElMessageBox.confirm(t('pomodoro.confirmClear'), t('pomodoro.confirmClearTitle'), {
+      confirmButtonText: t('pomodoro.clearBtn'),
+      cancelButtonText: t('actions.cancel'),
       type: 'warning'
     })
     await store.clearHistory()
-    ElMessage.success('历史记录已清空')
+    ElMessage.success(t('pomodoro.cleared'))
   } catch (err: unknown) {
     if (err !== 'cancel') {
-      ElMessage.error(getErrorMessage(err) || '清空失败')
+      ElMessage.error(getErrorMessage(err) || t('pomodoro.clearFailed'))
     }
   }
 }
@@ -279,9 +282,9 @@ async function handleComplete() {
     await store.fetchStats()
     await store.fetchHistory(1, 10)
     await store.fetchDailySummary()
-    ElMessage.success('番茄钟已完成！')
+    ElMessage.success(t('pomodoro.finished'))
   } catch (err: unknown) {
-    ElMessage.error(getErrorMessage(err) || '完成番茄钟失败')
+    ElMessage.error(getErrorMessage(err) || t('pomodoro.finishFailed'))
   }
 }
 
@@ -290,15 +293,19 @@ async function handleCancel() {
   try {
     await store.cancelSession(store.activeSession.id)
     await store.fetchHistory(1, 10)
-    ElMessage.info('番茄钟已取消')
+    ElMessage.info(t('pomodoro.canceled'))
   } catch (err: unknown) {
-    ElMessage.error(getErrorMessage(err) || '取消番茄钟失败')
+    ElMessage.error(getErrorMessage(err) || t('pomodoro.cancelFailed'))
   }
 }
 
 // 类型显示
 function getSessionTypeText(type: string) {
-  const map: Record<string, string> = { focus: '专注', short_break: '短休', long_break: '长休' }
+  const map: Record<string, string> = {
+    focus: t('pomodoro.focus'),
+    short_break: t('pomodoro.shortBreak'),
+    long_break: t('pomodoro.longBreak')
+  }
   return map[type] || type
 }
 
@@ -309,7 +316,11 @@ function getSessionTypeTag(type: string) {
 
 // 状态显示
 function getStatusText(status: string) {
-  const map: Record<string, string> = { running: '进行中', completed: '已完成', cancelled: '已取消' }
+  const map: Record<string, string> = {
+    running: t('status.running'),
+    completed: t('status.completed'),
+    cancelled: t('status.cancelled')
+  }
   return map[status] || status
 }
 
@@ -332,7 +343,11 @@ const getSessionColor = (type: string) => {
 };
 
 const getSessionLabel = (type: string) => {
-  const labels: Record<string, string> = { focus: '专注', short_break: '短休息', long_break: '长休息' };
+  const labels: Record<string, string> = {
+    focus: t('pomodoro.focus'),
+    short_break: t('pomodoro.shortBreak'),
+    long_break: t('pomodoro.longBreak')
+  };
   return labels[type] || type;
 };
 

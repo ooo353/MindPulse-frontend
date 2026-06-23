@@ -9,9 +9,9 @@
         :default-active="$route.path"
         class="sidebar-menu"
         router
-        background-color="#fff"
-        text-color="#303133"
-        active-text-color="#409eff"
+        :background-color="themeStore.isDark ? '#1e1e2e' : '#fff'"
+        :text-color="themeStore.isDark ? '#b0b0b0' : '#303133'"
+        :active-text-color="themeStore.isDark ? '#5a7dff' : '#409eff'"
       >
         <el-menu-item index="/dashboard" route="/dashboard">
           <el-icon><DataBoard /></el-icon>
@@ -34,21 +34,21 @@
           <el-icon><Timer /></el-icon>
           <span>{{ t('sidebar.pomodoro') }}</span>
         </el-menu-item>
-        <el-menu-item v-if="userStore.isAdmin" index="/admin" route="/admin">
+        <el-menu-item index="/admin" route="/admin" v-if="userStore.isAdmin">
           <el-icon><Setting /></el-icon>
           <span>{{ t('sidebar.admin') }}</span>
         </el-menu-item>
       </el-menu>
       <div class="sidebar-footer">
         <div class="user-avatar" :title="user?.username">
-          <img v-if="userStore.profile?.avatar" :src="userStore.profile.avatar" class="avatar-img" />
+          <img v-if="user?.avatar" :src="user.avatar" class="avatar-img" />
           <span v-else class="avatar-text">{{ user?.username?.charAt(0)?.toUpperCase() }}</span>
           <span class="online-dot"></span>
         </div>
         <div class="user-info-footer">
           <span class="user-name">{{ user?.nickname || user?.username }}</span>
           <el-tag :type="userStore.isAdmin ? 'danger' : 'success'" size="small" class="role-tag">
-            {{ userStore.isAdmin ? '管理员' : '用户' }}
+            {{ userStore.isAdmin ? t('user.adminRole') : t('user.userRole') }}
           </el-tag>
         </div>
       </div>
@@ -61,6 +61,14 @@
         <div class="header-content">
           <h2>{{ getPageTitle }}</h2>
           <div class="user-actions">
+            <el-tooltip :content="themeStore.isDark ? t('theme.light') : t('theme.dark')" placement="bottom">
+              <el-button circle size="small" @click="themeStore.toggle()" class="theme-toggle-btn">
+                <el-icon :size="16">
+                  <Moon v-if="!themeStore.isDark" />
+                  <Sunny v-else />
+                </el-icon>
+              </el-button>
+            </el-tooltip>
             <el-dropdown @command="changeLanguage">
               <el-button type="primary" plain size="small">
                 {{ currentLanguageLabel }}
@@ -110,6 +118,7 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useUserStore } from '@/stores/user';
+import { useThemeStore } from '@/stores/theme';
 import {
   DataBoard,
   Memo,
@@ -117,12 +126,15 @@ import {
   Bell,
   Setting,
   ArrowDown,
-  Timer
+  Timer,
+  Moon,
+  Sunny
 } from '@element-plus/icons-vue';
 import { useWebSocket } from '@/utils/websocket';
 
 const router = useRouter();
 const userStore = useUserStore();
+const themeStore = useThemeStore();
 const { t, locale } = useI18n();
 
 const user = computed(() => userStore.user);

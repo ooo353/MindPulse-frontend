@@ -3,8 +3,8 @@
     <div class="reminders-container">
       <!-- 页面标题 -->
       <div class="page-header">
-        <h2 class="page-title">智能提醒</h2>
-        <p class="page-subtitle">设置提醒，我们会在正确的时间通知你</p>
+        <h2 class="page-title">{{ t('reminders.title') }}</h2>
+        <p class="page-subtitle">{{ t('reminders.subtitle') }}</p>
       </div>
 
       <!-- WebSocket 状态 + 操作栏 -->
@@ -14,8 +14,8 @@
             <span :class="['ws-dot', wsConnected ? 'connected' : 'disconnected']"></span>
           </div>
           <div class="ws-info">
-            <span class="ws-title">{{ wsConnected ? '实时连接中' : '连接已断开' }}</span>
-            <span class="ws-subtitle">{{ wsConnected ? '提醒将通过浏览器推送通知' : '正在尝试重新连接...' }}</span>
+            <span class="ws-title">{{ wsConnected ? t('reminders.connected') : t('reminders.disconnected') }}</span>
+            <span class="ws-subtitle">{{ wsConnected ? t('reminders.pushHint') : t('reminders.reconnecting') }}</span>
           </div>
         </div>
         <el-button
@@ -24,7 +24,7 @@
           class="create-reminder-btn glossy-button"
         >
           <el-icon><Plus /></el-icon>
-          新建提醒
+          {{ t('reminders.createReminder') }}
         </el-button>
       </div>
 
@@ -34,8 +34,8 @@
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" fill="none"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" fill="none"/>
         </svg>
-        <h3>还没有提醒</h3>
-        <p>创建一个提醒，我们会按时通知你</p>
+        <h3>{{ t('reminders.noReminders') }}</h3>
+        <p>{{ t('reminders.noRemindersHint') }}</p>
       </div>
 
       <!-- 提醒卡片列表 -->
@@ -61,7 +61,7 @@
             <div class="reminder-message">{{ reminder.message }}</div>
             <div class="reminder-meta">
               {{ getRemindTypeText(reminder.remindType) }} · {{ reminder.remindTime }}
-              <span v-if="reminder.targetType"> · 关联{{ reminder.targetType === 'TASK' ? '任务' : '笔记' }}#{{ reminder.targetId }}</span>
+              <span v-if="reminder.targetType"> · {{ t('reminders.linked') }}{{ reminder.targetType === 'TASK' ? t('reminders.task') : t('reminders.note') }}#{{ reminder.targetId }}</span>
               · {{ formatDateTime(reminder.createdAt) }}
             </div>
           </div>
@@ -71,13 +71,13 @@
               @change="toggleReminderEnabled(reminder)"
               size="small"
             />
-            <el-button size="small" @click="editReminder(reminder)">编辑</el-button>
+            <el-button size="small" @click="editReminder(reminder)">{{ t('actions.edit') }}</el-button>
             <el-popconfirm
-              title="确定要删除这个提醒吗？"
+              :title="t('reminders.confirmDelete')"
               @confirm="deleteReminder(reminder.id)"
             >
               <template #reference>
-                <el-button size="small" type="danger">删除</el-button>
+                <el-button size="small" type="danger">{{ t('actions.delete') }}</el-button>
               </template>
             </el-popconfirm>
           </div>
@@ -87,8 +87,8 @@
       <!-- 通知历史 -->
       <div class="notifications-section">
         <div class="notifications-header">
-          <h3>通知历史</h3>
-          <el-button size="small" text @click="clearAllNotifications" v-if="notifications.length > 0">清空全部</el-button>
+          <h3>{{ t('reminders.notificationHistory') }}</h3>
+          <el-button size="small" text @click="clearAllNotifications" v-if="notifications.length > 0">{{ t('reminders.clearAll') }}</el-button>
         </div>
         <div class="notification-timeline" v-if="notifications.length > 0">
           <div
@@ -105,86 +105,86 @@
             </div>
           </div>
         </div>
-        <div v-else class="notification-empty">暂无通知</div>
+        <div v-else class="notification-empty">{{ t('reminders.noNotifications') }}</div>
       </div>
 
       <el-dialog
         v-model="showCreateDialog"
-        :title="isEditing ? '编辑提醒' : '新建提醒'"
+        :title="isEditing ? t('reminders.editReminder') : t('reminders.newReminder')"
         width="550px"
       >
         <el-form :model="currentReminder" :rules="reminderRules" ref="reminderFormRef" label-width="100px">
-          <el-form-item label="提醒内容" prop="message">
-            <el-input v-model="currentReminder.message" placeholder="请输入提醒内容" />
+          <el-form-item :label="t('reminders.messageLabel')" prop="message">
+            <el-input v-model="currentReminder.message" :placeholder="t('reminders.messagePlaceholder')" />
           </el-form-item>
 
-          <el-form-item label="提醒类型" prop="remindType">
-            <el-select v-model="currentReminder.remindType" placeholder="请选择提醒类型" style="width: 100%" @change="onRemindTypeChange">
-              <el-option label="一次性" value="ONCE" />
-              <el-option label="每天" value="DAILY" />
-              <el-option label="每周" value="WEEKLY" />
-              <el-option label="自定义" value="CUSTOM" />
+          <el-form-item :label="t('reminders.typeLabel')" prop="remindType">
+            <el-select v-model="currentReminder.remindType" :placeholder="t('reminders.typePlaceholder')" style="width: 100%" @change="onRemindTypeChange">
+              <el-option :label="t('reminders.typeOnce')" value="ONCE" />
+              <el-option :label="t('reminders.typeDaily')" value="DAILY" />
+              <el-option :label="t('reminders.typeWeekly')" value="WEEKLY" />
+              <el-option :label="t('reminders.typeCustom')" value="CUSTOM" />
             </el-select>
           </el-form-item>
 
-          <el-form-item label="提醒时间" prop="remindTime">
+          <el-form-item :label="t('reminders.timeLabel')" prop="remindTime">
             <el-time-picker
               v-model="remindTimePicker"
               format="HH:mm"
               value-format="HH:mm"
-              placeholder="选择时间"
+              :placeholder="t('reminders.timePlaceholder')"
               style="width: 100%"
               @update:model-value="currentReminder.remindTime = $event"
             />
           </el-form-item>
 
-          <el-form-item v-if="currentReminder.remindType === 'ONCE'" label="提醒日期">
+          <el-form-item v-if="currentReminder.remindType === 'ONCE'" :label="t('reminders.dateLabel')">
             <el-date-picker
               v-model="currentReminder.remindDate"
               type="date"
-              placeholder="选择日期"
+              :placeholder="t('reminders.datePlaceholder')"
               format="YYYY-MM-DD"
               value-format="YYYY-MM-DD"
               style="width: 100%"
             />
           </el-form-item>
 
-          <el-form-item v-if="currentReminder.remindType === 'WEEKLY'" label="星期几">
-            <el-select v-model="currentReminder.dayOfWeek" placeholder="选择星期几" style="width: 100%">
-              <el-option label="周一" value="MON" />
-              <el-option label="周二" value="TUE" />
-              <el-option label="周三" value="WED" />
-              <el-option label="周四" value="THU" />
-              <el-option label="周五" value="FRI" />
-              <el-option label="周六" value="SAT" />
-              <el-option label="周日" value="SUN" />
+          <el-form-item v-if="currentReminder.remindType === 'WEEKLY'" :label="t('reminders.dayOfWeekLabel')">
+            <el-select v-model="currentReminder.dayOfWeek" :placeholder="t('reminders.dayOfWeekPlaceholder')" style="width: 100%">
+              <el-option :label="t('reminders.mon')" value="MON" />
+              <el-option :label="t('reminders.tue')" value="TUE" />
+              <el-option :label="t('reminders.wed')" value="WED" />
+              <el-option :label="t('reminders.thu')" value="THU" />
+              <el-option :label="t('reminders.fri')" value="FRI" />
+              <el-option :label="t('reminders.sat')" value="SAT" />
+              <el-option :label="t('reminders.sun')" value="SUN" />
             </el-select>
           </el-form-item>
 
-          <el-form-item v-if="currentReminder.remindType === 'CUSTOM'" label="Cron表达式">
-            <el-input v-model="currentReminder.cronExpression" placeholder="如：0 0 9 * * MON-FRI" />
+          <el-form-item v-if="currentReminder.remindType === 'CUSTOM'" :label="t('reminders.cronLabel')">
+            <el-input v-model="currentReminder.cronExpression" :placeholder="t('reminders.cronPlaceholder')" />
           </el-form-item>
 
-          <el-form-item label="关联类型">
+          <el-form-item :label="t('reminders.linkTypeLabel')">
             <el-radio-group v-model="currentReminder.targetType">
-              <el-radio value="TASK">任务</el-radio>
-              <el-radio value="NOTE">笔记</el-radio>
+              <el-radio value="TASK">{{ t('reminders.task') }}</el-radio>
+              <el-radio value="NOTE">{{ t('reminders.note') }}</el-radio>
             </el-radio-group>
           </el-form-item>
 
-          <el-form-item label="关联ID">
-            <el-input-number v-model="currentReminder.targetId" :min="0" placeholder="可选" style="width: 100%" />
+          <el-form-item :label="t('reminders.linkIdLabel')">
+            <el-input-number v-model="currentReminder.targetId" :min="0" :placeholder="t('reminders.linkIdPlaceholder')" style="width: 100%" />
           </el-form-item>
 
-          <el-form-item label="是否启用">
+          <el-form-item :label="t('reminders.enabledLabel')">
             <el-switch v-model="currentReminder.enabled" />
           </el-form-item>
         </el-form>
 
         <template #footer>
           <span class="dialog-footer">
-            <el-button @click="showCreateDialog = false">取消</el-button>
-            <el-button type="primary" @click="saveReminder">保存</el-button>
+            <el-button @click="showCreateDialog = false">{{ t('actions.cancel') }}</el-button>
+            <el-button type="primary" @click="saveReminder">{{ t('actions.save') }}</el-button>
           </span>
         </template>
       </el-dialog>
@@ -193,7 +193,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import Layout from '@/components/Layout.vue';
@@ -201,6 +202,8 @@ import { getErrorMessage } from '@/utils/error';
 import { useWebSocket } from '@/utils/websocket';
 import { reminderApi } from '@/api/reminderApi';
 import { Reminder, CreateReminderRequest } from '@/types/reminder';
+
+const { t } = useI18n();
 
 const wsConnected = ref(false);
 let statusTimer: ReturnType<typeof setInterval> | null = null;
@@ -238,17 +241,17 @@ const currentReminder = ref<CreateReminderRequest>({
   enabled: true
 });
 
-const reminderRules = {
+const reminderRules = computed(() => ({
   message: [
-    { required: true, message: '请输入提醒内容', trigger: 'blur' }
+    { required: true, message: t('reminders.messageRequired'), trigger: 'blur' }
   ],
   remindType: [
-    { required: true, message: '请选择提醒类型', trigger: 'change' }
+    { required: true, message: t('reminders.typeRequired'), trigger: 'change' }
   ],
   remindTime: [
-    { required: true, message: '请选择提醒时间', trigger: 'change' }
+    { required: true, message: t('reminders.timeRequired'), trigger: 'change' }
   ]
-};
+}));
 
 const onRemindTypeChange = (type: string) => {
   currentReminder.value.remindDate = undefined;
@@ -258,10 +261,10 @@ const onRemindTypeChange = (type: string) => {
 
 const getRemindTypeText = (type: string) => {
   const map: Record<string, string> = {
-    ONCE: '一次性',
-    DAILY: '每天',
-    WEEKLY: '每周',
-    CUSTOM: '自定义'
+    ONCE: t('reminders.typeOnce'),
+    DAILY: t('reminders.typeDaily'),
+    WEEKLY: t('reminders.typeWeekly'),
+    CUSTOM: t('reminders.typeCustom')
   };
   return map[type] || type;
 };
@@ -287,7 +290,7 @@ const fetchReminders = async () => {
     loading.value = true;
     reminders.value = await reminderApi.getReminders();
   } catch (error) {
-    console.error('获取提醒失败:', error);
+    console.error('Failed to fetch reminders:', error);
   } finally {
     loading.value = false;
   }
@@ -329,7 +332,7 @@ const toggleReminderEnabled = async (reminder: Reminder) => {
       targetType: reminder.targetType,
       enabled: reminder.enabled
     });
-    ElMessage.success('提醒状态已更新');
+    ElMessage.success(t('reminders.statusUpdated'));
   } catch (error) {
     reminder.enabled = !reminder.enabled;
     ElMessage.error(getErrorMessage(error));
@@ -340,9 +343,9 @@ const deleteReminder = async (id: number) => {
   try {
     await reminderApi.deleteReminder(id);
     reminders.value = reminders.value.filter(r => r.id !== id);
-    ElMessage.success('提醒删除成功');
+    ElMessage.success(t('reminders.deleteSuccess'));
   } catch (error) {
-    ElMessage.error('删除提醒失败');
+    ElMessage.error(t('reminders.deleteFailed'));
   }
 };
 
@@ -357,18 +360,18 @@ const saveReminder = async () => {
             editingId.value,
             currentReminder.value
           );
-          ElMessage.success('提醒更新成功');
+          ElMessage.success(t('reminders.updateSuccess'));
         } else {
           await reminderApi.createReminder(currentReminder.value);
-          ElMessage.success('提醒创建成功');
+          ElMessage.success(t('reminders.createSuccess'));
         }
 
         showCreateDialog.value = false;
         resetCurrentReminder();
         await fetchReminders();
       } catch (error) {
-        console.error('保存提醒失败:', error);
-        ElMessage.error('保存提醒失败');
+        console.error('Failed to save reminder:', error);
+        ElMessage.error(t('reminders.saveFailed'));
       }
     }
   });

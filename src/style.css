@@ -64,7 +64,7 @@
 }
 
 /* 暗色主题 */
-[data-theme="dark"] {
+:root.dark {
   --primary-color: #5a7dff;
   --primary-light: #6ea5ff;
   --secondary-color: #5d54e3;

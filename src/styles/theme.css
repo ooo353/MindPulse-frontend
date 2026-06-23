@@ -1,0 +1,227 @@
+/* ========================================
+   MindPulse Dark Mode Theme
+   Uses .dark class on :root (html element)
+   ======================================== */
+
+/* ---- Sidebar dark overrides ---- */
+:root.dark .sidebar {
+  background: #1e1e2e !important;
+  border-right-color: #2a2a3e !important;
+}
+
+:root.dark .logo {
+  background: #1e1e2e !important;
+  border-bottom-color: #2a2a3e !important;
+}
+
+:root.dark .logo-text {
+  color: #e0e0e0 !important;
+}
+
+:root.dark .sidebar-menu.el-menu {
+  background-color: #1e1e2e !important;
+}
+
+:root.dark .sidebar-menu .el-menu-item {
+  color: #b0b0b0 !important;
+}
+
+:root.dark .sidebar-menu .el-menu-item:hover {
+  background: #2a2a3e !important;
+  color: #e0e0e0 !important;
+}
+
+:root.dark .sidebar-menu .el-menu-item.is-active {
+  background: rgba(90, 125, 255, 0.15) !important;
+  color: #5a7dff !important;
+}
+
+:root.dark .sidebar-menu .el-menu-item::before {
+  background: #5a7dff !important;
+}
+
+/* Override scoped :deep menu item styles */
+:root.dark .sidebar .el-menu-item {
+  color: #b0b0b0 !important;
+}
+
+:root.dark .sidebar .el-menu-item:hover {
+  background: #2a2a3e !important;
+  color: #e0e0e0 !important;
+}
+
+:root.dark .sidebar .el-menu-item.is-active {
+  background: rgba(90, 125, 255, 0.15) !important;
+  color: #5a7dff !important;
+}
+
+:root.dark .sidebar-footer {
+  border-top-color: #2a2a3e !important;
+}
+
+:root.dark .user-avatar {
+  background: rgba(90, 125, 255, 0.2) !important;
+}
+
+:root.dark .avatar-text {
+  color: #5a7dff !important;
+}
+
+:root.dark .online-dot {
+  border-color: #1e1e2e !important;
+}
+
+:root.dark .user-name {
+  color: #b0b0b0 !important;
+}
+
+/* ---- Header dark overrides ---- */
+:root.dark .header {
+  background-color: #1e1e2e !important;
+  border-bottom-color: #2a2a3e !important;
+}
+
+/* ---- Element Plus dark overrides ---- */
+:root.dark .el-button--primary.is-plain {
+  --el-button-bg-color: rgba(90, 125, 255, 0.15);
+  --el-button-border-color: rgba(90, 125, 255, 0.3);
+  --el-button-text-color: #5a7dff;
+  --el-button-hover-bg-color: rgba(90, 125, 255, 0.25);
+  --el-button-hover-border-color: #5a7dff;
+  --el-button-hover-text-color: #5a7dff;
+}
+
+:root.dark .el-dropdown-menu {
+  background-color: #1e1e2e !important;
+  border-color: #2a2a3e !important;
+}
+
+:root.dark .el-dropdown-menu__item {
+  color: #b0b0b0 !important;
+}
+
+:root.dark .el-dropdown-menu__item:hover {
+  background-color: #2a2a3e !important;
+  color: #e0e0e0 !important;
+}
+
+:root.dark .el-card {
+  --el-card-bg-color: #1e1e2e;
+  border-color: #2a2a3e !important;
+}
+
+:root.dark .el-dialog {
+  --el-dialog-bg-color: #1e1e2e;
+}
+
+:root.dark .el-input__wrapper {
+  background-color: #2a2a3e !important;
+  box-shadow: 0 0 0 1px #3a3a4e inset !important;
+}
+
+:root.dark .el-input__inner {
+  color: #e0e0e0 !important;
+}
+
+:root.dark .el-textarea__inner {
+  background-color: #2a2a3e !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a4e !important;
+}
+
+:root.dark .el-select-dropdown {
+  background-color: #1e1e2e !important;
+  border-color: #2a2a3e !important;
+}
+
+:root.dark .el-select-dropdown__item {
+  color: #b0b0b0 !important;
+}
+
+:root.dark .el-select-dropdown__item.hover,
+:root.dark .el-select-dropdown__item:hover {
+  background-color: #2a2a3e !important;
+  color: #e0e0e0 !important;
+}
+
+:root.dark .el-table {
+  --el-table-bg-color: #1e1e2e;
+  --el-table-tr-bg-color: #1e1e2e;
+  --el-table-header-bg-color: #2a2a3e;
+  --el-table-row-hover-bg-color: #2a2a3e;
+  --el-table-text-color: #e0e0e0;
+  --el-table-header-text-color: #b0b0b0;
+  --el-table-border-color: #2a2a3e;
+}
+
+:root.dark .el-tag {
+  --el-tag-bg-color: rgba(90, 125, 255, 0.15);
+  --el-tag-border-color: rgba(90, 125, 255, 0.3);
+  --el-tag-text-color: #5a7dff;
+}
+
+:root.dark .el-tag--success {
+  --el-tag-bg-color: rgba(76, 201, 240, 0.15);
+  --el-tag-border-color: rgba(76, 201, 240, 0.3);
+  --el-tag-text-color: #4cc9f0;
+}
+
+:root.dark .el-tag--danger {
+  --el-tag-bg-color: rgba(247, 37, 133, 0.15);
+  --el-tag-border-color: rgba(247, 37, 133, 0.3);
+  --el-tag-text-color: #ff5ca8;
+}
+
+:root.dark .el-tag--warning {
+  --el-tag-bg-color: rgba(248, 150, 30, 0.15);
+  --el-tag-border-color: rgba(248, 150, 30, 0.3);
+  --el-tag-text-color: #f8961e;
+}
+
+:root.dark .el-badge__content {
+  --el-badge-bg-color: #ff5ca8;
+}
+
+:root.dark .el-message-box {
+  --el-messagebox-title-color: #e0e0e0;
+  background-color: #1e1e2e !important;
+  border-color: #2a2a3e !important;
+}
+
+:root.dark .el-notification {
+  background-color: #1e1e2e !important;
+  border-color: #2a2a3e !important;
+}
+
+:root.dark .el-popover {
+  --el-popover-bg-color: #1e1e2e;
+  border-color: #2a2a3e !important;
+}
+
+/* ---- Orb brightness reduction in dark mode ---- */
+:root.dark .orb {
+  filter: blur(40px) brightness(0.6);
+}
+
+/* ---- Scrollbar dark ---- */
+:root.dark ::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+:root.dark ::-webkit-scrollbar-thumb {
+  background: #3a3a4e;
+}
+
+:root.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4a4a5e;
+}
+
+/* ---- Theme toggle button ---- */
+.theme-toggle-btn {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+  transform: rotate(15deg);
+}

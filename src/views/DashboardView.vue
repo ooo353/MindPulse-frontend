@@ -9,7 +9,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number">{{ summary?.totalTasks ?? 0 }}</span>
-            <span class="stat-label">总任务</span>
+            <span class="stat-label">{{ t('dashboard.totalTasks') }}</span>
           </div>
         </div>
         <div class="stat-card card-glow-effect" @mousemove="handleCardMouseMove">
@@ -18,7 +18,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number">{{ summary?.completedTasks ?? 0 }}</span>
-            <span class="stat-label">已完成</span>
+            <span class="stat-label">{{ t('dashboard.completedTasks') }}</span>
           </div>
         </div>
         <div class="stat-card card-glow-effect" @mousemove="handleCardMouseMove">
@@ -27,7 +27,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number">{{ summary?.completionRate ?? 0 }}%</span>
-            <span class="stat-label">完成率</span>
+            <span class="stat-label">{{ t('dashboard.completionRate') }}</span>
             <el-progress
               :percentage="summary?.completionRate ?? 0"
               :stroke-width="6"
@@ -42,7 +42,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number">{{ summary?.activeDays ?? 0 }}</span>
-            <span class="stat-label">活跃天数(30天)</span>
+            <span class="stat-label">{{ t('dashboard.activeDays') }}</span>
           </div>
         </div>
         <div class="stat-card card-glow-effect" @mousemove="handleCardMouseMove">
@@ -51,7 +51,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number">{{ summary?.totalNotes ?? 0 }}</span>
-            <span class="stat-label">总笔记</span>
+            <span class="stat-label">{{ t('dashboard.totalNotes') }}</span>
           </div>
         </div>
       </div>
@@ -59,7 +59,7 @@
       <!-- Productivity Section -->
       <div class="section-card">
         <div class="section-header">
-          <h3>生产力趋势</h3>
+          <h3>{{ t('dashboard.productivity') }}</h3>
           <div class="period-tabs">
             <button
               v-for="p in periods"
@@ -71,13 +71,13 @@
         </div>
         <div class="bar-chart" v-if="productivity && productivity.dates.length > 0">
           <div class="bar-chart-row">
-            <div class="bar-chart-label">完成任务</div>
+            <div class="bar-chart-label">{{ t('dashboard.completedTask') }}</div>
             <div class="bar-chart-bars">
               <div
                 v-for="(val, i) in productivity.completedCounts"
                 :key="'t-' + i"
                 class="bar-wrapper"
-                :title="`${productivity.dates[i]}: ${val} 个`"
+                :title="`${productivity.dates[i]}: ${val} ${t('dashboard.count')}`"
               >
                 <div
                   class="bar bar-task"
@@ -88,13 +88,13 @@
             </div>
           </div>
           <div class="bar-chart-row">
-            <div class="bar-chart-label">学习分钟</div>
+            <div class="bar-chart-label">{{ t('dashboard.studyMinutes') }}</div>
             <div class="bar-chart-bars">
               <div
                 v-for="(val, i) in productivity.studyMinutes"
                 :key="'m-' + i"
                 class="bar-wrapper"
-                :title="`${productivity.dates[i]}: ${val} 分钟`"
+                :title="`${productivity.dates[i]}: ${val} ${t('pomodoro.minute')}`"
               >
                 <div
                   class="bar bar-study"
@@ -104,53 +104,53 @@
             </div>
           </div>
         </div>
-        <div v-else class="empty-hint">暂无生产力数据</div>
+        <div v-else class="empty-hint">{{ t('dashboard.noProductivityData') }}</div>
       </div>
 
       <!-- Category Distribution -->
       <div class="section-row">
         <div class="section-card half">
-          <h3>任务分类分布</h3>
+          <h3>{{ t('dashboard.taskCategories') }}</h3>
           <div v-if="categoryDistribution && categoryDistribution.taskCategories.length > 0" class="category-list">
             <div v-for="cat in categoryDistribution.taskCategories" :key="cat.name" class="category-item">
               <span class="category-name">{{ cat.name }}</span>
               <el-progress
                 :percentage="getCategoryPercent(cat.value, taskCategoryTotal)"
                 :stroke-width="14"
-                :format="() => cat.value + ' 个'"
+                :format="() => cat.value + ' ' + t('dashboard.count')"
               />
             </div>
           </div>
-          <div v-else class="empty-hint">暂无任务分类数据</div>
+          <div v-else class="empty-hint">{{ t('dashboard.noTaskCategoryData') }}</div>
         </div>
         <div class="section-card half">
-          <h3>笔记分类分布</h3>
+          <h3>{{ t('dashboard.noteCategories') }}</h3>
           <div v-if="categoryDistribution && categoryDistribution.noteCategories.length > 0" class="category-list">
             <div v-for="cat in categoryDistribution.noteCategories" :key="cat.name" class="category-item">
               <span class="category-name">{{ cat.name }}</span>
               <el-progress
                 :percentage="getCategoryPercent(cat.value, noteCategoryTotal)"
                 :stroke-width="14"
-                :format="() => cat.value + ' 篇'"
+                :format="() => cat.value + ' ' + t('dashboard.articles')"
               />
             </div>
           </div>
-          <div v-else class="empty-hint">暂无笔记分类数据</div>
+          <div v-else class="empty-hint">{{ t('dashboard.noNoteCategoryData') }}</div>
         </div>
       </div>
 
       <!-- Study Heatmap -->
       <div class="section-card">
-        <h3>学习热力图 ({{ currentYear }})</h3>
+        <h3>{{ t('dashboard.heatmap') }} ({{ currentYear }})</h3>
         <div class="heatmap-container" v-if="heatmapWeeks.length > 0">
           <div class="heatmap-legend">
-            <span>少</span>
+            <span>{{ t('dashboard.less') }}</span>
             <div class="heatmap-cell" style="background: #ebedf0" />
             <div class="heatmap-cell" style="background: #9be9a8" />
             <div class="heatmap-cell" style="background: #40c463" />
             <div class="heatmap-cell" style="background: #30a14e" />
             <div class="heatmap-cell" style="background: #216e39" />
-            <span>多</span>
+            <span>{{ t('dashboard.more') }}</span>
           </div>
           <div class="heatmap">
             <div v-for="(week, wi) in heatmapWeeks" :key="wi" class="heatmap-week">
@@ -159,12 +159,12 @@
                 :key="di"
                 class="heatmap-cell"
                 :style="{ backgroundColor: getHeatmapColor(day.minutes) }"
-                :title="`${day.date}: ${day.minutes} 分钟`"
+                :title="`${day.date}: ${day.minutes} ${t('pomodoro.minute')}`"
               />
             </div>
           </div>
         </div>
-        <div v-else class="empty-hint">暂无学习数据</div>
+        <div v-else class="empty-hint">{{ t('dashboard.noStudyData') }}</div>
       </div>
     </div>
   </Layout>
@@ -172,10 +172,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Layout from '@/components/Layout.vue'
 import { useDashboardStore } from '@/stores/dashboard'
 import { ElMessage } from 'element-plus'
 
+const { t } = useI18n()
 const dashboardStore = useDashboardStore()
 const currentYear = new Date().getFullYear()
 
@@ -184,11 +186,11 @@ const productivity = computed(() => dashboardStore.productivity)
 const categoryDistribution = computed(() => dashboardStore.categoryDistribution)
 
 const activePeriod = ref('daily')
-const periods = [
-  { key: 'daily', label: '近30天' },
-  { key: 'weekly', label: '近12周' },
-  { key: 'monthly', label: '近12月' }
-]
+const periods = computed(() => [
+  { key: 'daily', label: t('dashboard.last30Days') },
+  { key: 'weekly', label: t('dashboard.last12Weeks') },
+  { key: 'monthly', label: t('dashboard.last12Months') }
+])
 
 const maxCompleted = computed(() => {
   if (!productivity.value) return 1
@@ -295,7 +297,7 @@ onMounted(async () => {
   ])
   const hasFailure = results.some(r => r.status === 'rejected')
   if (hasFailure) {
-    ElMessage.warning('Some dashboard data failed to load')
+    ElMessage.warning(t('dashboard.loadFailed'))
   }
 })
 </script>

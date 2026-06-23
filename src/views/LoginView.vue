@@ -7,7 +7,7 @@
       <div class="shape shape-triangle"></div>
       <div class="shape shape-diamond"></div>
     </div>
-    
+
     <div class="login-form-wrapper">
       <div class="login-card">
         <div class="card-header">
@@ -19,15 +19,15 @@
             </svg>
             <h2 class="title gradient-text">MindPulse</h2>
           </div>
-          <p class="subtitle">AI 赋能，高效学习</p>
+          <p class="subtitle">{{ t('auth.subtitle') }}</p>
         </div>
-        
+
         <el-form :model="loginForm" :rules="rules" ref="loginFormRef" label-width="0px" class="login-form">
           <el-form-item prop="username">
-            <el-input 
-              v-model="loginForm.username" 
-              prefix-icon="User" 
-              placeholder="用户名或邮箱" 
+            <el-input
+              v-model="loginForm.username"
+              prefix-icon="User"
+              :placeholder="t('auth.usernameOrEmail')"
               size="large"
               autocomplete="username"
               class="animated-input"
@@ -37,13 +37,13 @@
               </template>
             </el-input>
           </el-form-item>
-          
+
           <el-form-item prop="password">
-            <el-input 
-              v-model="loginForm.password" 
-              prefix-icon="Lock" 
-              type="password" 
-              placeholder="密码" 
+            <el-input
+              v-model="loginForm.password"
+              prefix-icon="Lock"
+              type="password"
+              :placeholder="t('auth.password')"
               size="large"
               autocomplete="current-password"
               show-password
@@ -55,17 +55,17 @@
               </template>
             </el-input>
           </el-form-item>
-          
+
           <el-form-item class="remember-forgot">
-            <el-checkbox v-model="rememberMe" class="custom-checkbox">记住我</el-checkbox>
-            <a href="#" class="forgot-password" @click.prevent="handleForgotPassword">忘记密码?</a>
+            <el-checkbox v-model="rememberMe" class="custom-checkbox">{{ t('auth.rememberMe') }}</el-checkbox>
+            <a href="#" class="forgot-password" @click.prevent="handleForgotPassword">{{ t('auth.forgotPassword') }}</a>
           </el-form-item>
-          
+
           <el-form-item>
-            <el-button 
-              type="primary" 
-              size="large" 
-              @click="handleLogin" 
+            <el-button
+              type="primary"
+              size="large"
+              @click="handleLogin"
               :loading="loading"
               class="login-button gradient-button"
               :disabled="loading"
@@ -77,20 +77,20 @@
                   <line x1="15" y1="12" x2="3" y2="12"></line>
                 </svg>
               </template>
-              登录
+              {{ t('auth.login') }}
             </el-button>
           </el-form-item>
         </el-form>
 
         <div class="register-link">
-          还没有账号？<router-link to="/register" class="register-link-text">立即注册</router-link>
+          {{ t('auth.noAccount') }}<router-link to="/register" class="register-link-text">{{ t('auth.goRegister') }}</router-link>
         </div>
       </div>
-      
+
       <div class="login-illustration">
         <div class="illustration-content">
-          <h3 class="illustration-title">AI 驱动的高效学习</h3>
-          <p class="illustration-subtitle">通过 AI 智能解析和自动化管理，让你的学习与生活井井有条</p>
+          <h3 class="illustration-title">{{ t('auth.aiPowered') }}</h3>
+          <p class="illustration-subtitle">{{ t('auth.aiPoweredDesc') }}</p>
           <ul class="features-list">
             <li class="feature-item">
               <div class="feature-icon-wrapper">
@@ -98,7 +98,7 @@
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" fill="none"/>
                 </svg>
               </div>
-              自然语言任务解析
+              {{ t('auth.featureTask') }}
             </li>
             <li class="feature-item">
               <div class="feature-icon-wrapper">
@@ -107,7 +107,7 @@
                   <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" fill="none"/>
                 </svg>
               </div>
-              智能定时提醒
+              {{ t('auth.featureReminder') }}
             </li>
             <li class="feature-item">
               <div class="feature-icon-wrapper">
@@ -118,7 +118,7 @@
                   <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2"/>
                 </svg>
               </div>
-              AI 笔记摘要生成
+              {{ t('auth.featureNote') }}
             </li>
           </ul>
         </div>
@@ -128,14 +128,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getErrorMessage } from '@/utils/error';
 import { User, Lock } from '@element-plus/icons-vue';
 import { useUserStore } from '@/stores/user';
 import { authApi } from '@/api/authApi';
 
+const { t } = useI18n();
 const router = useRouter();
 const userStore = useUserStore();
 
@@ -154,24 +156,22 @@ const loginForm = reactive<LoginForm>({
 
 const validateUsername = (rule: any, value: any, callback: any) => {
   if (value === '') {
-    callback(new Error('请输入用户名或邮箱'));
+    callback(new Error(t('validation.required')));
   } else if (value.length < 3) {
-    callback(new Error('长度至少为3个字符'));
+    callback(new Error(t('validation.minLength', { min: 3 })));
   } else if (value.length > 20) {
-    callback(new Error('长度不能超过20个字符'));
+    callback(new Error(t('validation.maxLength', { max: 20 })));
   } else if (value.includes('@')) {
-    // 如果包含@符号，验证是否为有效的邮箱格式
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(value)) {
-      callback(new Error('请输入有效的邮箱地址'));
+      callback(new Error(t('validation.email')));
     } else {
       callback();
     }
   } else {
-    // 检查用户名格式（字母、数字、下划线、连字符）
     const usernameRegex = /^[a-zA-Z0-9_-]+$/;
     if (!usernameRegex.test(value)) {
-      callback(new Error('用户名只能包含字母、数字、下划线和连字符'));
+      callback(new Error(t('validation.usernameChars')));
     } else {
       callback();
     }
@@ -180,22 +180,22 @@ const validateUsername = (rule: any, value: any, callback: any) => {
 
 const validatePassword = (rule: any, value: any, callback: any) => {
   if (value === '') {
-    callback(new Error('请输入密码'));
+    callback(new Error(t('validation.required')));
   } else if (value.length < 6) {
-    callback(new Error('密码长度不能少于6位'));
+    callback(new Error(t('validation.minLength', { min: 6 })));
   } else {
     callback();
   }
 };
 
-const rules = {
+const rules = computed(() => ({
   username: [
     { required: true, validator: validateUsername, trigger: 'blur' }
   ],
   password: [
     { validator: validatePassword, trigger: 'blur' }
   ]
-};
+}));
 
 const loginFormRef = ref();
 
@@ -224,43 +224,39 @@ const handleLogin = async () => {
       { username: data.username, email: data.email, role: data.role },
       data.token
     );
-    ElMessage.success('登录成功！');
+    ElMessage.success(t('auth.loginSuccess'));
 
-    // 登录成功后，尝试导航到之前想要访问的页面，或者默认导航到任务页面
     const redirectTo = router.currentRoute.value.query.redirect as string || '/tasks';
     await router.push(redirectTo).catch(err => {
-      console.error('路由跳转失败:', err);
+      console.error('Route navigation failed:', err);
       router.push('/tasks').catch(e => {
-        console.error('默认路由跳转也失败:', e);
+        console.error('Default route navigation also failed:', e);
       });
     });
   } catch (error: unknown) {
-    console.error('登录失败:', error);
-    ElMessage.error(getErrorMessage(error) || '登录失败，请检查用户名和密码');
+    console.error('Login failed:', error);
+    ElMessage.error(getErrorMessage(error) || t('auth.loginFailed'));
   } finally {
     loading.value = false;
   }
 };
 
 const handleForgotPassword = () => {
-  // 重置密码功能的实现
-  ElMessageBox.prompt('请输入您的注册邮箱地址，我们将发送重置密码的链接到您的邮箱', '重置密码', {
-    confirmButtonText: '发送',
-    cancelButtonText: '取消',
+  ElMessageBox.prompt(t('auth.resetPasswordPrompt'), t('auth.resetPassword'), {
+    confirmButtonText: t('auth.send'),
+    cancelButtonText: t('actions.cancel'),
     inputPattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    inputErrorMessage: '请输入有效的邮箱地址',
-    inputPlaceholder: '请输入邮箱地址'
+    inputErrorMessage: t('validation.email'),
+    inputPlaceholder: t('auth.email')
   }).then(async ({ value }) => {
     try {
-      // 这里应该调用后端API发送重置密码邮件
-      // 由于目前没有对应的API，我们只是模拟操作
-      console.log(`重置密码邮件将发送至: ${value}`);
-      ElMessage.success('重置密码邮件已发送，请检查您的邮箱');
+      console.log(`Password reset email will be sent to: ${value}`);
+      ElMessage.success(t('auth.resetEmailSent'));
     } catch (error) {
-      console.log('取消操作或发生错误:', error);
+      console.log('Operation cancelled or error occurred:', error);
     }
   }).catch(() => {
-    // 用户取消操作
+    // User cancelled
   });
 };
 
@@ -716,7 +712,7 @@ onMounted(() => {
     width: 800px;
     min-height: auto;
   }
-  
+
   .login-card {
     padding: 40px 30px;
   }
@@ -726,15 +722,15 @@ onMounted(() => {
   .login-form-wrapper {
     flex-direction: column;
   }
-  
+
   .login-illustration {
     padding: 30px 20px;
   }
-  
+
   .illustration-content {
     max-width: 100%;
   }
-  
+
   .login-card {
     padding: 35px 30px;
   }
@@ -744,30 +740,30 @@ onMounted(() => {
   .login-container {
     padding: 15px;
   }
-  
+
   .login-form-wrapper {
     width: 100%;
     max-width: 100%;
     flex-direction: column;
     border-radius: 20px;
   }
-  
+
   .login-card {
     padding: 40px 25px;
   }
-  
+
   .login-illustration {
     display: none;
   }
-  
+
   .floating-shapes {
     display: none;
   }
-  
+
   .title {
     font-size: 28px;
   }
-  
+
   .subtitle {
     font-size: 15px;
   }
@@ -777,19 +773,19 @@ onMounted(() => {
   .login-container {
     padding: 10px;
   }
-  
+
   .login-card {
     padding: 35px 20px;
   }
-  
+
   .login-button {
     height: 48px;
   }
-  
+
   .social-login-container {
     gap: 10px;
   }
-  
+
   .social-login-button {
     height: 44px;
   }

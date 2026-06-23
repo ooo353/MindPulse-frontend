@@ -17,36 +17,36 @@
             </svg>
             <h2 class="title">MindPulse</h2>
           </div>
-          <p class="subtitle">创建您的账户</p>
+          <p class="subtitle">{{ t('auth.createAccount') }}</p>
         </div>
-        
+
         <el-form :model="registerForm" :rules="rules" ref="registerFormRef" label-width="0px" class="register-form">
           <el-form-item prop="username">
-            <el-input 
-              v-model="registerForm.username" 
-              prefix-icon="User" 
-              placeholder="用户名" 
+            <el-input
+              v-model="registerForm.username"
+              prefix-icon="User"
+              :placeholder="t('auth.username')"
               size="large"
               autocomplete="username"
             />
           </el-form-item>
-          
+
           <el-form-item prop="email">
-            <el-input 
-              v-model="registerForm.email" 
-              prefix-icon="Message" 
-              placeholder="邮箱地址" 
+            <el-input
+              v-model="registerForm.email"
+              prefix-icon="Message"
+              :placeholder="t('auth.email')"
               size="large"
               autocomplete="email"
             />
           </el-form-item>
-          
+
           <el-form-item prop="password">
             <el-input
               v-model="registerForm.password"
               prefix-icon="Lock"
               type="password"
-              placeholder="密码"
+              :placeholder="t('auth.password')"
               size="large"
               autocomplete="new-password"
             />
@@ -57,24 +57,24 @@
               <span class="strength-text">{{ strengthText }}</span>
             </div>
           </el-form-item>
-          
+
           <el-form-item prop="confirmPassword">
-            <el-input 
-              v-model="registerForm.confirmPassword" 
-              prefix-icon="Lock" 
-              type="password" 
-              placeholder="确认密码" 
+            <el-input
+              v-model="registerForm.confirmPassword"
+              prefix-icon="Lock"
+              type="password"
+              :placeholder="t('user.confirmPassword')"
               size="large"
               autocomplete="new-password"
               @keyup.enter="handleRegister"
             />
           </el-form-item>
-          
+
           <el-form-item>
-            <el-button 
-              type="primary" 
-              size="large" 
-              @click="handleRegister" 
+            <el-button
+              type="primary"
+              size="large"
+              @click="handleRegister"
               :loading="loading"
               class="register-button glossy-button"
               :disabled="loading"
@@ -88,46 +88,46 @@
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
               </template>
-              注册
+              {{ t('auth.register') }}
             </el-button>
           </el-form-item>
-          
+
           <div class="divider">
-            <span>需要帮助？</span>
+            <span>{{ t('auth.needHelp') }}</span>
           </div>
-          
+
           <div class="support-info">
-            <p class="support-text">如果您在注册过程中遇到问题，请联系客服</p>
+            <p class="support-text">{{ t('auth.helpDesc') }}</p>
           </div>
         </el-form>
-        
+
         <div class="login-link">
-          已有账号？<router-link to="/login">立即登录</router-link>
+          {{ t('auth.hasAccount') }}<router-link to="/login">{{ t('auth.goLogin') }}</router-link>
         </div>
       </div>
-      
+
       <div class="register-illustration">
         <div class="illustration-content">
-          <h3>加入 MindPulse</h3>
-          <p>注册账户，开启 AI 增强型个人生产力体验</p>
+          <h3>{{ t('auth.joinMindPulse') }}</h3>
+          <p>{{ t('auth.joinDesc') }}</p>
           <ul class="features-list">
             <li>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feature-icon">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
-              AI 自然语言任务解析
+              {{ t('auth.featureTask') }}
             </li>
             <li>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feature-icon">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
-              笔记摘要自动生成
+              {{ t('auth.featureNote') }}
             </li>
             <li>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feature-icon">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
-              多渠道智能提醒
+              {{ t('auth.featureReminder') }}
             </li>
           </ul>
         </div>
@@ -139,12 +139,14 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { getErrorMessage } from '@/utils/error';
 import { User, Message, Lock } from '@element-plus/icons-vue';
 import { useUserStore } from '@/stores/user';
 import { authApi } from '@/api/authApi';
 
+const { t } = useI18n();
 const router = useRouter();
 const userStore = useUserStore();
 
@@ -166,14 +168,13 @@ const registerForm = reactive<RegisterForm>({
 
 const validatePass = (rule: any, value: any, callback: any) => {
   if (value === '') {
-    callback(new Error('请输入密码'));
+    callback(new Error(t('validation.required')));
   } else if (value.length < 6) {
-    callback(new Error('密码长度不能少于6位'));
+    callback(new Error(t('validation.minLength', { min: 6 })));
   } else {
     if (registerForm.confirmPassword !== '') {
-      // 对两次输入的密码进行验证
       if (registerForm.confirmPassword !== registerForm.password) {
-        callback(new Error('两次输入的密码不一致'));
+        callback(new Error(t('validation.passwordMismatch')));
       }
     }
     callback();
@@ -182,9 +183,9 @@ const validatePass = (rule: any, value: any, callback: any) => {
 
 const validatePass2 = (rule: any, value: any, callback: any) => {
   if (value === '') {
-    callback(new Error('请再次输入密码'));
+    callback(new Error(t('validation.required')));
   } else if (value !== registerForm.password) {
-    callback(new Error('两次输入的密码不一致'));
+    callback(new Error(t('validation.passwordMismatch')));
   } else {
     callback();
   }
@@ -193,18 +194,18 @@ const validatePass2 = (rule: any, value: any, callback: any) => {
 const validateEmail = (rule: any, value: any, callback: any) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!value) {
-    callback(new Error('请输入邮箱'));
+    callback(new Error(t('validation.required')));
   } else if (!emailRegex.test(value)) {
-    callback(new Error('请输入有效的邮箱地址'));
+    callback(new Error(t('validation.email')));
   } else {
     callback();
   }
 };
 
-const rules = {
+const rules = computed(() => ({
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 15, message: '长度在 3 到 15 个字符', trigger: 'blur' }
+    { required: true, message: t('validation.required'), trigger: 'blur' },
+    { min: 3, max: 15, message: t('validation.lengthRange', { min: 3, max: 15 }), trigger: 'blur' }
   ],
   email: [
     { required: true, validator: validateEmail, trigger: 'blur' }
@@ -215,7 +216,7 @@ const rules = {
   confirmPassword: [
     { required: true, validator: validatePass2, trigger: 'blur' }
   ]
-};
+}));
 
 const strengthLevel = computed(() => {
   const pwd = registerForm.password;
@@ -226,7 +227,11 @@ const strengthLevel = computed(() => {
 });
 
 const strengthText = computed(() => {
-  const map: Record<string, string> = { weak: '弱', medium: '中', strong: '强' };
+  const map: Record<string, string> = {
+    weak: t('priority.low'),
+    medium: t('priority.medium'),
+    strong: t('priority.high')
+  };
   return map[strengthLevel.value];
 });
 
@@ -246,11 +251,11 @@ const handleRegister = async () => {
       password: registerForm.password
     });
 
-    ElMessage.success('注册成功！请登录');
+    ElMessage.success(t('auth.registerSuccess'));
     router.push('/login');
   } catch (error: unknown) {
-    console.error('注册失败:', error);
-    ElMessage.error(getErrorMessage(error) || '注册失败，请稍后重试');
+    console.error('Registration failed:', error);
+    ElMessage.error(getErrorMessage(error) || t('auth.registerFailed'));
   } finally {
     loading.value = false;
   }

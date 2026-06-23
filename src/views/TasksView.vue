@@ -9,7 +9,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number animated-number">{{ animatedTotal }}</span>
-            <span class="stat-label">总任务</span>
+            <span class="stat-label">{{ t('tasks.totalTasks') }}</span>
           </div>
         </div>
         <div class="stat-card card-glow-effect" @mousemove="handleCardMouseMove">
@@ -18,7 +18,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number animated-number">{{ animatedPending }}</span>
-            <span class="stat-label">待完成</span>
+            <span class="stat-label">{{ t('tasks.pendingTasks') }}</span>
           </div>
         </div>
         <div class="stat-card card-glow-effect" @mousemove="handleCardMouseMove">
@@ -27,7 +27,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number animated-number">{{ animatedCompleted }}</span>
-            <span class="stat-label">已完成</span>
+            <span class="stat-label">{{ t('tasks.completedTasks') }}</span>
           </div>
         </div>
         <div class="stat-card card-glow-effect" @mousemove="handleCardMouseMove">
@@ -36,7 +36,7 @@
           </div>
           <div class="stat-info">
             <span class="stat-number animated-number">{{ animatedArchived }}</span>
-            <span class="stat-label">已归档</span>
+            <span class="stat-label">{{ t('tasks.archivedTasks') }}</span>
           </div>
         </div>
       </div>
@@ -45,7 +45,7 @@
       <div class="ai-input-area">
         <div class="ai-input-wrapper">
           <AIInput
-            placeholder="输入自然语言描述创建任务，例如：'下周五前复习第三章'"
+            :placeholder="t('tasks.aiPlaceholder')"
             @ai-process="handleAIParsedTask"
           />
         </div>
@@ -55,7 +55,7 @@
           class="create-task-btn glossy-button"
         >
           <el-icon><Plus /></el-icon>
-          新建任务
+          {{ t('tasks.createTask') }}
         </el-button>
       </div>
 
@@ -86,9 +86,9 @@
           <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" fill="none"/>
           <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" stroke-width="2" fill="none"/>
         </svg>
-        <h3>还没有任务</h3>
-        <p>使用 AI 输入框或点击"新建任务"开始</p>
-        <el-button type="primary" @click="handleCreateTask">创建第一个任务</el-button>
+        <h3>{{ t('tasks.noTasks') }}</h3>
+        <p>{{ t('tasks.noTasksHint') }}</p>
+        <el-button type="primary" @click="handleCreateTask">{{ t('tasks.createFirst') }}</el-button>
       </div>
 
       <!-- 任务卡片列表 -->
@@ -102,21 +102,21 @@
         >
           <div class="task-card-body" @click="editTask(task)">
             <div class="task-card-title">{{ task.title }}</div>
-            <div class="task-card-desc">{{ task.description || '暂无描述' }}</div>
+            <div class="task-card-desc">{{ task.description || t('tasks.noDescription') }}</div>
           </div>
           <div class="task-card-meta">
             <span class="task-card-date">{{ formatDate(task.dueDate) }}</span>
             <el-tag :type="getPriorityType(task.priority)" size="small">{{ getPriorityText(task.priority) }}</el-tag>
             <el-tag :type="getStatusType(task.status)" size="small">{{ getStatusText(task.status) }}</el-tag>
             <el-button size="small" :type="task.status === 'completed' ? 'info' : 'success'" @click.stop="toggleTaskStatus(task)">
-              {{ task.status === 'completed' ? '复原' : '完成' }}
+              {{ task.status === 'completed' ? t('tasks.restore') : t('tasks.complete') }}
             </el-button>
             <el-popconfirm
-              title="确定要删除这个任务吗？"
+              :title="t('tasks.confirmDelete')"
               @confirm="deleteTask(task.id)"
             >
               <template #reference>
-                <el-button size="small" type="danger" @click.stop>删除</el-button>
+                <el-button size="small" type="danger" @click.stop>{{ t('actions.delete') }}</el-button>
               </template>
             </el-popconfirm>
           </div>
@@ -126,63 +126,63 @@
       <!-- 任务创建/编辑对话框 -->
       <el-dialog
         v-model="showCreateDialog"
-        :title="isEditing ? '编辑任务' : '新建任务'"
+        :title="isEditing ? t('tasks.editTask') : t('tasks.newTask')"
         width="500px"
       >
         <el-form :model="currentTask" :rules="taskRules" ref="taskFormRef" label-width="80px">
-          <el-form-item label="任务标题" prop="title">
-            <el-input v-model="currentTask.title" placeholder="请输入任务标题" />
+          <el-form-item :label="t('tasks.titleLabel')" prop="title">
+            <el-input v-model="currentTask.title" :placeholder="t('tasks.titlePlaceholder')" />
           </el-form-item>
 
-          <el-form-item label="描述" prop="description">
+          <el-form-item :label="t('tasks.descLabel')" prop="description">
             <el-input
               v-model="currentTask.description"
               type="textarea"
               :rows="3"
-              placeholder="请输入任务描述"
+              :placeholder="t('tasks.descPlaceholder')"
             />
           </el-form-item>
 
-          <el-form-item label="截止日期" prop="dueDate">
+          <el-form-item :label="t('tasks.dueDateLabel')" prop="dueDate">
             <el-date-picker
               v-model="currentTask.dueDate"
               type="date"
-              placeholder="选择日期"
+              :placeholder="t('tasks.dueDatePlaceholder')"
               format="YYYY-MM-DD"
               value-format="YYYY-MM-DD"
               style="width: 100%"
             />
           </el-form-item>
 
-          <el-form-item label="优先级" prop="priority">
-            <el-select v-model="currentTask.priority" placeholder="请选择优先级" style="width: 100%">
-              <el-option label="高" value="high"></el-option>
-              <el-option label="中" value="medium"></el-option>
-              <el-option label="低" value="low"></el-option>
+          <el-form-item :label="t('tasks.priorityLabel')" prop="priority">
+            <el-select v-model="currentTask.priority" :placeholder="t('tasks.priorityPlaceholder')" style="width: 100%">
+              <el-option :label="t('priority.high')" value="high"></el-option>
+              <el-option :label="t('priority.medium')" value="medium"></el-option>
+              <el-option :label="t('priority.low')" value="low"></el-option>
             </el-select>
           </el-form-item>
 
-          <el-form-item label="分类" prop="category">
-            <el-input v-model="currentTask.category" placeholder="如：考试复习" />
+          <el-form-item :label="t('tasks.categoryLabel')" prop="category">
+            <el-input v-model="currentTask.category" :placeholder="t('tasks.categoryPlaceholder')" />
           </el-form-item>
 
-          <el-form-item label="关联笔记" prop="relatedNotes">
-            <el-input v-model="currentTask.relatedNotes" placeholder="笔记ID，逗号分隔" />
+          <el-form-item :label="t('tasks.relatedNotesLabel')" prop="relatedNotes">
+            <el-input v-model="currentTask.relatedNotes" :placeholder="t('tasks.relatedNotesPlaceholder')" />
           </el-form-item>
 
-          <el-form-item label="状态" prop="status">
-            <el-select v-model="currentTask.status" placeholder="请选择状态" style="width: 100%">
-              <el-option label="待完成" value="pending"></el-option>
-              <el-option label="已完成" value="completed"></el-option>
-              <el-option label="已归档" value="archived"></el-option>
+          <el-form-item :label="t('tasks.statusLabel')" prop="status">
+            <el-select v-model="currentTask.status" :placeholder="t('tasks.statusPlaceholder')" style="width: 100%">
+              <el-option :label="t('status.pending')" value="pending"></el-option>
+              <el-option :label="t('status.completed')" value="completed"></el-option>
+              <el-option :label="t('status.archived')" value="archived"></el-option>
             </el-select>
           </el-form-item>
         </el-form>
 
         <template #footer>
           <span class="dialog-footer">
-            <el-button @click="showCreateDialog = false">取消</el-button>
-            <el-button type="primary" @click="saveTask">保存</el-button>
+            <el-button @click="showCreateDialog = false">{{ t('actions.cancel') }}</el-button>
+            <el-button type="primary" @click="saveTask">{{ t('actions.save') }}</el-button>
           </span>
         </template>
       </el-dialog>
@@ -192,6 +192,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Plus } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import Layout from '@/components/Layout.vue';
@@ -200,6 +201,7 @@ import AIInput from '@/components/AIInput.vue';
 import { useTaskStore } from '@/stores/task';
 import { Task, CreateTaskRequest, UpdateTaskRequest } from '@/types/task';
 
+const { t } = useI18n();
 const taskStore = useTaskStore();
 
 // 动画数字
@@ -264,12 +266,12 @@ onMounted(() => {
 });
 
 // 状态管理
-const tabs = [
-  { key: 'all', label: '全部任务' },
-  { key: 'pending', label: '待完成' },
-  { key: 'completed', label: '已完成' },
-  { key: 'archived', label: '已归档' }
-];
+const tabs = computed(() => [
+  { key: 'all', label: t('tasks.allTasks') },
+  { key: 'pending', label: t('tasks.pendingTasks') },
+  { key: 'completed', label: t('tasks.completedTasks') },
+  { key: 'archived', label: t('tasks.archivedTasks') }
+]);
 const activeTab = ref('all');
 const showCreateDialog = ref(false);
 const isEditing = ref(false);
@@ -288,21 +290,21 @@ const currentTask = ref<CreateTaskRequest | UpdateTaskRequest>({
 });
 
 // 任务验证规则
-const taskRules = {
+const taskRules = computed(() => ({
   title: [
-    { required: true, message: '请输入任务标题', trigger: 'blur' },
-    { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
+    { required: true, message: t('tasks.titleRequired'), trigger: 'blur' },
+    { min: 1, max: 100, message: t('tasks.titleLength'), trigger: 'blur' }
   ],
   description: [
-    { max: 500, message: '描述长度不能超过500个字符', trigger: 'blur' }
+    { max: 500, message: t('tasks.descLength'), trigger: 'blur' }
   ],
   priority: [
-    { required: true, message: '请选择优先级', trigger: 'change' }
+    { required: true, message: t('tasks.priorityRequired'), trigger: 'change' }
   ],
   status: [
-    { required: true, message: '请选择状态', trigger: 'change' }
+    { required: true, message: t('tasks.statusRequired'), trigger: 'change' }
   ]
-};
+}));
 
 // 根据活动标签过滤任务
 const filteredTasks = computed(() => {
@@ -320,12 +322,7 @@ const filteredTasks = computed(() => {
 
 // 优先级显示转换
 const getPriorityText = (priority: 'high' | 'medium' | 'low') => {
-  const map = {
-    high: '高',
-    medium: '中',
-    low: '低'
-  };
-  return map[priority];
+  return t(`priority.${priority}`);
 };
 
 const getPriorityType = (priority: 'high' | 'medium' | 'low') => {
@@ -339,12 +336,7 @@ const getPriorityType = (priority: 'high' | 'medium' | 'low') => {
 
 // 状态显示转换
 const getStatusText = (status: 'pending' | 'completed' | 'archived') => {
-  const map = {
-    pending: '待完成',
-    completed: '已完成',
-    archived: '已归档'
-  };
-  return map[status];
+  return t(`status.${status}`);
 };
 
 const getStatusType = (status: 'pending' | 'completed' | 'archived') => {
@@ -358,7 +350,7 @@ const getStatusType = (status: 'pending' | 'completed' | 'archived') => {
 
 // 格式化日期
 const formatDate = (dateString?: string) => {
-  if (!dateString) return '无';
+  if (!dateString) return t('tasks.noDueDate');
   const date = new Date(dateString);
   return date.toLocaleDateString('zh-CN');
 };
@@ -374,16 +366,16 @@ const editTask = (task: Task) => {
 // 切换任务状态
 const toggleTaskStatus = async (task: Task) => {
   if (!task.id) {
-    ElMessage.error('任务ID缺失，无法更新状态');
+    ElMessage.error(t('tasks.idMissing'));
     return;
   }
   try {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
     await taskStore.updateTaskStatus(task.id, newStatus);
-    ElMessage.success('任务状态更新成功');
+    ElMessage.success(t('tasks.statusUpdated'));
   } catch (error: unknown) {
     console.error('更新任务状态失败:', error);
-    ElMessage.error(getErrorMessage(error) || '更新任务状态失败');
+    ElMessage.error(getErrorMessage(error) || t('tasks.statusUpdateFailed'));
   }
 };
 
@@ -391,17 +383,17 @@ const toggleTaskStatus = async (task: Task) => {
 const deleteTask = async (id: number) => {
   try {
     await taskStore.deleteTask(id);
-    ElMessage.success('任务删除成功');
+    ElMessage.success(t('tasks.deleteSuccess'));
   } catch (error: unknown) {
     console.error('删除任务失败:', error);
-    ElMessage.error(getErrorMessage(error) || '删除任务失败');
+    ElMessage.error(getErrorMessage(error) || t('tasks.deleteFailed'));
   }
 };
 
 // 保存任务（创建或更新）
 const saveTask = async () => {
   if (!taskFormRef.value) return;
-  
+
   taskFormRef.value.validate(async (valid: boolean) => {
     if (valid) {
       try {
@@ -411,18 +403,18 @@ const saveTask = async () => {
             editingTaskId.value,
             currentTask.value as UpdateTaskRequest
           );
-          ElMessage.success('任务更新成功');
+          ElMessage.success(t('tasks.updateSuccess'));
         } else {
           // 创建任务
           await taskStore.createTask(currentTask.value as CreateTaskRequest);
-          ElMessage.success('任务创建成功');
+          ElMessage.success(t('tasks.createSuccess'));
         }
-        
+
         showCreateDialog.value = false;
         resetCurrentTask();
       } catch (error: unknown) {
         console.error('保存任务失败:', error);
-        ElMessage.error(getErrorMessage(error) || '保存任务失败');
+        ElMessage.error(getErrorMessage(error) || t('tasks.saveFailed'));
       }
     } else {
       console.log('验证失败!');
@@ -438,6 +430,7 @@ const handleAIParsedTask = (parsedTask: any) => {
     description: parsedTask.description,
     dueDate: parsedTask.dueDate,
     priority: parsedTask.priority,
+    category: parsedTask.category || '',
     status: 'pending'
   };
   showCreateDialog.value = true;
@@ -557,6 +550,12 @@ const handleCreateTask = () => {
 /* 卡片列表入场动画 */
 .card-list .task-card {
   animation: stagger-fade-in 0.4s ease both;
+}
+
+/* Virtual scrolling optimization - skips rendering of off-screen cards */
+.card-list .task-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 120px;
 }
 
 .dialog-footer {

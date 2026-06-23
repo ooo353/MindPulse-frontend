@@ -27,7 +27,9 @@ class WebSocketService {
   constructor() {
     this.client = new Client({
       webSocketFactory: () => new SockJS('http://localhost:8090/ws'),
-      connectHeaders: {},
+      connectHeaders: {
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+      },
       debug: (str) => console.log(str),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,

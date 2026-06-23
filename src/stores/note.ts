@@ -15,6 +15,7 @@ export const useNoteStore = defineStore('notes', () => {
       notes.value = await noteApi.getNotes();
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : '获取笔记失败';
+      throw err instanceof Error ? err : new Error(String(err));
     } finally {
       loading.value = false;
     }

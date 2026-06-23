@@ -8,19 +8,19 @@
       size="large"
     >
       <template #append>
-        <el-button 
-          :icon="MagicStick" 
-          type="primary" 
+        <el-button
+          :icon="MagicStick"
+          type="primary"
           :loading="loading"
           @click="handleAIProcess"
         >
-          AI解析
+          {{ t('aiInput.parse') }}
         </el-button>
       </template>
     </el-input>
-    
+
     <div v-if="suggestions.length > 0" class="suggestions">
-      <h4>提示：</h4>
+      <h4>{{ t('aiInput.suggestions') }}</h4>
       <ul>
         <li v-for="(suggestion, index) in suggestions" :key="index" @click="selectSuggestion(suggestion)">
           {{ suggestion }}
@@ -31,7 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { MagicStick } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { useTaskStore } from '@/stores/task';
@@ -48,9 +49,13 @@ interface Props {
   placeholder?: string;
 }
 
+const { t } = useI18n();
+
 const props = withDefaults(defineProps<Props>(), {
-  placeholder: '请输入自然语言描述...'
+  placeholder: ''
 });
+
+const placeholder = computed(() => props.placeholder || t('aiInput.placeholder'));
 
 const emit = defineEmits<{
   (e: 'ai-process', result: AIParsedResult): void;
@@ -60,18 +65,16 @@ const taskStore = useTaskStore();
 const inputValue = ref('');
 const loading = ref(false);
 
-// 示例建议列表
-const suggestions = [
-  '下周三之前完成项目报告',
-  '提醒我明天上午9点开会',
-  '安排复习数学第一章内容',
-  '设置每月15号缴费提醒'
-];
+const suggestions = computed(() => [
+  t('aiInput.suggestion1'),
+  t('aiInput.suggestion2'),
+  t('aiInput.suggestion3'),
+  t('aiInput.suggestion4')
+]);
 
-// 处理AI解析
 const handleAIProcess = async () => {
   if (!inputValue.value.trim()) {
-    ElMessage.warning('请输入内容');
+    ElMessage.warning(t('aiInput.enterContent'));
     return;
   }
 
@@ -80,9 +83,9 @@ const handleAIProcess = async () => {
   try {
     const result = await taskStore.parseTaskWithAI(inputValue.value);
     if (result.fromCache) {
-      ElMessage.success(`AI解析成功（缓存命中，${result.responseTimeMs}ms）`);
+      ElMessage.success(t('aiInput.parseSuccessCached', { ms: result.responseTimeMs }));
     } else {
-      ElMessage.success(`AI解析成功（${result.responseTimeMs}ms）`);
+      ElMessage.success(t('aiInput.parseSuccess', { ms: result.responseTimeMs }));
     }
     emit('ai-process', {
       title: result.parsedTask.title,
@@ -93,9 +96,8 @@ const handleAIProcess = async () => {
     });
     inputValue.value = '';
   } catch (error) {
-    console.error('AI解析失败:', error);
+    console.error('AI parse failed:', error);
 
-    // 模拟返回结果
     const mockResult = {
       title: inputValue.value.substring(0, 30) + (inputValue.value.length > 30 ? '...' : ''),
       description: inputValue.value,
@@ -105,13 +107,12 @@ const handleAIProcess = async () => {
 
     emit('ai-process', mockResult);
     inputValue.value = '';
-    ElMessage.warning('使用模拟AI解析结果（真实API不可用）');
+    ElMessage.warning(t('aiInput.usingMock'));
   } finally {
     loading.value = false;
   }
 };
 
-// 选择建议
 const selectSuggestion = (suggestion: string) => {
   inputValue.value = suggestion;
 };
